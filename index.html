@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#111318">
+<title>GTA 6 Interactive Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<style>
+:root{color-scheme:dark;--bg:#111318;--panel:#1a1e26;--line:#303744;--muted:#aab2c0;--accent:#d9b66f}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f4f5f7;font:15px system-ui,-apple-system,Segoe UI,sans-serif}
+header{padding:18px 20px;border-bottom:1px solid var(--line);background:#151820}h1{font-size:clamp(20px,4vw,28px);margin:0 0 5px}header p{margin:0;color:var(--muted)}
+.layout{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 84px)}aside{padding:18px;border-right:1px solid var(--line);background:var(--panel)}
+#map{height:calc(100vh - 84px);min-height:520px;background:#242a32}
+label{display:block;font-weight:600;margin:15px 0 7px}input,select{width:100%;padding:11px;border-radius:8px;border:1px solid var(--line);background:#11151c;color:white}
+.hint{font-size:13px;line-height:1.5;color:var(--muted)}.status{padding:12px;border:1px solid #665633;background:#292419;border-radius:9px;color:#f1d79e;font-size:13px;line-height:1.45}
+#results{margin-top:16px;display:grid;gap:9px}.item{padding:11px;border:1px solid var(--line);border-radius:9px;background:#141820}.item strong{display:block;margin-bottom:4px}.item small{color:var(--muted)}
+.empty{padding:14px;border:1px dashed var(--line);border-radius:9px;color:var(--muted);line-height:1.5}
+button{padding:8px 10px;border-radius:7px;border:1px solid var(--line);background:#292f3a;color:white}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#1a1e26;color:#f4f5f7}.leaflet-container a{color:var(--accent)}
+@media(max-width:760px){.layout{grid-template-columns:1fr}aside{border-right:0;border-bottom:1px solid var(--line)}#map{height:55vh;min-height:360px;grid-row:1}header{padding:15px}}
+</style>
+</head>
+<body>
+<header><h1>GTA 6 Interactive Map</h1><p>Mapa comunitário • pontos com evidência • filtros por objetivo</p></header>
+<div class="layout">
+<aside>
+<div class="status">🚧 Estrutura inicial: ainda não há base cartográfica oficial nem pontos confirmados cadastrados. Os locais só serão publicados quando houver evidência.</div>
+<label for="search">Pesquisar ponto</label><input id="search" type="search" placeholder="Nome ou descrição…">
+<label for="category">Categoria</label><select id="category"><option value="">Todas as categorias</option><option value="armas">Armas e equipamentos</option><option value="veiculos">Veículos raros/de luxo</option><option value="dinheiro">Dinheiro e tesouros</option><option value="segredos">Segredos e locais especiais</option><option value="missoes">Missões e atividades</option></select>
+<label for="evidence">Verificação</label><select id="evidence"><option value="">Todos os status</option><option value="confirmado">Confirmado</option><option value="relatado">Relatado</option><option value="em-investigacao">Em investigação</option></select>
+<div id="results"><div class="empty">Carregando catálogo…</div></div>
+<p class="hint">Seu progresso é salvo neste navegador. A sincronização entre dispositivos será adicionada numa etapa futura.</p>
+</aside>
+<main id="map" aria-label="Mapa interativo"></main>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+(async()=>{
+const map=L.map('map',{crs:L.CRS.Simple,minZoom:-2,maxZoom:3});const bounds=[[0,0],[1000,1600]];
+L.rectangle(bounds,{color:'#596575',weight:1,fillColor:'#242a32',fillOpacity:.15}).addTo(map);map.fitBounds(bounds);L.control.scale({imperial:false}).addTo(map);
+const markers=L.layerGroup().addTo(map);let points=[];const found=new Set(JSON.parse(localStorage.getItem('gta6-found')||'[]'));
+const cats={armas:'Armas e equipamentos',veiculos:'Veículos raros/de luxo',dinheiro:'Dinheiro e tesouros',segredos:'Segredos e locais especiais',missoes:'Missões e atividades'};
+const statuses={confirmado:'Confirmado',relatado:'Relatado','em-investigacao':'Em investigação'};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function render(){
+const q=document.getElementById('search').value.toLowerCase(),cat=document.getElementById('category').value,ev=document.getElementById('evidence').value;
+const shown=points.filter(p=>(!cat||p.category===cat)&&(!ev||p.status===ev)&&(!q||(p.name+' '+p.description).toLowerCase().includes(q)));
+markers.clearLayers();shown.forEach(p=>{if(Array.isArray(p.coordinates)&&p.coordinates.length===2)L.marker(p.coordinates).bindPopup('<b>'+esc(p.name)+'</b><br>'+esc(p.description)+'<br><small>'+esc(statuses[p.status]||p.status)+'</small>').addTo(markers)});
+const out=document.getElementById('results');out.innerHTML=shown.length?shown.map(p=>'<div class="item"><strong>'+esc(p.name)+'</strong><small>'+esc(cats[p.category]||p.category)+' • '+esc(statuses[p.status]||p.status)+(found.has(p.id)?' • ✓ Encontrado':'')+'</small><p class="hint">'+esc(p.description)+'</p><button data-id="'+esc(p.id)+'">'+(found.has(p.id)?'Desmarcar encontrado':'Marcar como encontrado')+'</button></div>').join(''):'<div class="empty">Nenhum ponto cadastrado corresponde aos filtros. O catálogo começa vazio para evitar informações inventadas.</div>';
+out.querySelectorAll('button[data-id]').forEach(b=>b.addEventListener('click',()=>{found.has(b.dataset.id)?found.delete(b.dataset.id):found.add(b.dataset.id);localStorage.setItem('gta6-found',JSON.stringify([...found]));render()}));
+}
+['search','category','evidence'].forEach(id=>document.getElementById(id).addEventListener(id==='search'?'input':'change',render));
+try{const r=await fetch('./data/points.json');if(!r.ok)throw Error('HTTP '+r.status);const data=await r.json();points=Array.isArray(data.points)?data.points:[];render()}catch(e){document.getElementById('results').innerHTML='<div class="empty">Não foi possível carregar data/points.json. Confira a publicação no GitHub Pages.</div>'}
+})();
+</script>
+</body></html>
