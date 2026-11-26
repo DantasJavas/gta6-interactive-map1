@@ -32,7 +32,13 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .pin-icon{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border:2px solid rgba(255,255,255,.9);border-radius:50% 50% 50% 4px;transform:rotate(-45deg);box-shadow:0 2px 7px #0009;font-size:15px}
 .pin-icon span{transform:rotate(45deg);line-height:1}
 .pin-icon-game{width:34px;height:38px;border:0;border-radius:0;background:transparent;box-shadow:none;transform:none}
-.pin-icon-game img{display:block;width:32px;height:32px;object-fit:contain;filter:drop-shadow(0 1px 2px #000) drop-shadow(0 0 3px #000);}
+.pin-icon-game img{display:block;width:32px;height:32px;object-fit:contain;filter:drop-shadow(0 1px 2px #000) drop-shadow(0 0 3px #000)}
+.pin-icon-weapon{width:36px;height:36px;border:2px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px #000b}
+.pin-icon-weapon img{width:25px;height:25px;filter:drop-shadow(0 1px 1px #000)!important}
+.pin-icon-weapon.common{background:#f5f5f5;border-color:#fff}
+.pin-icon-weapon.legendary{background:#f2c342;border-color:#ffe38a;box-shadow:0 0 10px #f2c342aa,0 2px 8px #000b}
+.weapon-rarity-label{display:block;margin:10px 0 5px;font-size:12px;font-weight:650;color:#e8b5d2}
+.weapon-rarity-select{width:100%;min-height:40px;padding:8px 10px;border-radius:8px;border:1px solid #59415e;background:#171923;color:#f4f5f7;font:inherit;font-size:13px}
 .pin-armas{background:#c94b54}.pin-veiculos{background:#287ec0}.pin-dinheiro{background:#238653}.pin-segredos{background:#7950a8}.pin-missoes{background:#bd782c}
 .nearby-row{display:flex;align-items:center;gap:10px;margin-top:16px;padding:11px;border:1px solid var(--line);border-radius:9px;background:#141820}
 .nearby-row input{width:18px;height:18px;accent-color:var(--accent);flex:0 0 auto}
@@ -221,6 +227,7 @@ const markers=L.layerGroup().addTo(map);let points=[];const pointRenderer=L.canv
 const cats={armas:'Armas e equipamentos',veiculos:'Veículos raros/de luxo',dinheiro:'Dinheiro e tesouros',segredos:'Segredos e locais especiais',missoes:'Missões e atividades'};
 const statuses={confirmado:'Confirmado',relatado:'Relatado','em-investigacao':'Em investigação'};
 const chapterAvailability=(()=>{try{return JSON.parse(localStorage.getItem('gta6-chapters')||'{}')}catch(e){return {}}})();
+const weaponRarity=(()=>{try{return JSON.parse(localStorage.getItem('gta6-weapon-rarity')||'{}')}catch(e){return {}}})();
 const chapterLabels={cap1:'Capítulo 1',posteriores:'Capítulos posteriores','nao-verificado':'Ainda não verificado'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ptTerms=[
@@ -243,8 +250,9 @@ markers.clearLayers();
 filtered.forEach(p=>{
 if(Array.isArray(p.coordinates)&&p.coordinates.length===2){
 const iconUrl=itemPinUrl(p),shot=itemScreenshot(p);
-const icon=L.divIcon({className:'',html:'<div class="pin-icon pin-icon-game"><img src="'+iconUrl+'" alt="'+esc(categoryTitle(p))+'" loading="lazy"></div>',iconSize:[36,40],iconAnchor:[18,36],popupAnchor:[0,-34]});
-L.marker(p.coordinates,{icon}).bindPopup('<div class="popup-item">'+(shot?'<img class="popup-item-image" src="'+esc(shot)+'" alt="Imagem de '+esc(p.name)+'" loading="lazy" onerror="this.style.display=\'none\'">':'<img class="popup-item-image" src="'+iconUrl+'" alt="'+esc(categoryTitle(p))+'" loading="lazy">')+'<div class="popup-item-content"><b>'+esc(translateDescription(p.name))+'</b><div>'+esc(translateDescription(p.description))+'</div></div></div><small>'+esc(p.area||'Leonida')+' · '+esc(statuses[p.status]||p.status)+'</small><br><small>Coordenadas do catálogo: '+p.coordinates[1].toFixed(4)+', '+(-p.coordinates[0]).toFixed(4)+'</small>').addTo(markers);
+const isWeapon=p.category==='armas',rarity=weaponRarity[p.id]||'common';
+const icon=L.divIcon({className:'',html:'<div class="'+(isWeapon?'pin-icon-weapon '+(rarity==='legendary'?'legendary':'common'):'pin-icon pin-icon-game')+'"><img src="'+iconUrl+'" alt="'+esc(categoryTitle(p))+'" loading="lazy"></div>',iconSize:isWeapon?[40,40]:[36,40],iconAnchor:isWeapon?[20,20]:[18,36],popupAnchor:[0,isWeapon?-20:-34]});
+L.marker(p.coordinates,{icon}).bindPopup('<div class="popup-item">'+(shot?'<img class="popup-item-image" src="'+esc(shot)+'" alt="Imagem de '+esc(p.name)+'" loading="lazy" onerror="this.style.display=\'none\'">':'<img class="popup-item-image" src="'+iconUrl+'" alt="'+esc(categoryTitle(p))+'" loading="lazy">')+'<div class="popup-item-content"><b>'+esc(translateDescription(p.name))+'</b><div>'+esc(translateDescription(p.description))+'</div></div></div><small>'+esc(p.area||'Leonida')+' · '+esc(statuses[p.status]||p.status)+(isWeapon?'<br><small>Raridade: '+(rarity==='legendary'?'Lendária — permanece no inventário':'Comum — pode ser perdida')+'</small>':'')+'</small><br><small>Coordenadas do catálogo: '+p.coordinates[1].toFixed(4)+', '+(-p.coordinates[0]).toFixed(4)+'</small>').addTo(markers);
 }
 });
 const count=document.getElementById('resultCount');
@@ -253,6 +261,7 @@ const out=document.getElementById('results'),limit=80,listed=filtered.slice(0,li
 out.innerHTML=!cat?'<div class="empty">Selecione uma categoria nos filtros para exibir os pontos no mapa.</div>':listed.length?listed.map(p=>{const shot=itemScreenshot(p),pin=itemPinUrl(p);return '<div class="item"><div class="item-main"><img class="item-thumb" src="'+pin+'" alt="Ícone de '+esc(categoryTitle(p))+'" loading="lazy"><div class="item-copy"><strong>'+esc(p.name)+'</strong><small>'+esc(cats[p.category]||p.category)+' • '+esc(statuses[p.status]||p.status)+(found.has(p.id)?' • ✓ Encontrado':'')+'</small></div></div>'+(shot?'<img class="item-detail-shot" src="'+esc(shot)+'" alt="Imagem do local '+esc(p.name)+'" loading="lazy" onerror="this.style.display=\'none\'">':'')+'<p class="hint">'+esc(translateDescription(p.description))+'</p><small>'+esc(p.area||'Leonida')+'</small><label class="chapter-label" for="chapter-'+esc(p.id)+'">Disponibilidade na história</label><select class="chapter-select" id="chapter-'+esc(p.id)+'" data-chapter-id="'+esc(p.id)+'"><option value="nao-verificado"'+((chapterAvailability[p.id]||'nao-verificado')==='nao-verificado'?' selected':'')+'>Ainda não verificado</option><option value="cap1"'+(chapterAvailability[p.id]==='cap1'?' selected':'')+'>Capítulo 1</option><option value="posteriores"'+(chapterAvailability[p.id]==='posteriores'?' selected':'')+'>Capítulos posteriores</option></select><div class="item-actions"><button data-view="'+esc(p.id)+'">Ver no mapa</button><button data-id="'+esc(p.id)+'">'+(found.has(p.id)?'Desmarcar encontrado':'Marcar como encontrado')+'</button></div></div>'}).join(''):'<div class="empty">Nenhum ponto encontrado com estes filtros. Tente aumentar o raio, mover o mapa ou limpar algum filtro.</div>';
 if(filtered.length>limit)out.innerHTML+='<p class="hint">Mostrando os primeiros '+limit+' de '+filtered.length+' resultados. Refine a pesquisa para encontrar um ponto específico.</p>';
 out.querySelectorAll('select[data-chapter-id]').forEach(el=>el.addEventListener('change',()=>{chapterAvailability[el.dataset.chapterId]=el.value;localStorage.setItem('gta6-chapters',JSON.stringify(chapterAvailability));render()}));
+out.querySelectorAll('select[data-rarity-id]').forEach(el=>el.addEventListener('change',()=>{weaponRarity[el.dataset.rarityId]=el.value;localStorage.setItem('gta6-weapon-rarity',JSON.stringify(weaponRarity));render()}));
 out.querySelectorAll('button[data-id]').forEach(b=>b.addEventListener('click',()=>{found.has(b.dataset.id)?found.delete(b.dataset.id):found.add(b.dataset.id);localStorage.setItem('gta6-found',JSON.stringify([...found]));render()}));
 out.querySelectorAll('button[data-view]').forEach(b=>b.addEventListener('click',()=>{const p=filtered.find(item=>item.id===b.dataset.view);if(!p||!Array.isArray(p.coordinates))return;map.setView(p.coordinates,Math.max(map.getZoom(),5.5),{animate:true});markers.eachLayer(marker=>{if(marker.getPopup()?.getContent()?.includes(esc(p.name)))marker.openPopup()})}));
 
