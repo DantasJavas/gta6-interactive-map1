@@ -1,0 +1,35 @@
+name: Validate map catalog
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate points catalog
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path("data/points.json").read_text(encoding="utf-8"))
+          assert data.get("schema_version") == 1
+          assert isinstance(data.get("points"), list)
+          required = {"id", "name", "category", "status", "description", "source"}
+          categories = {"armas", "veiculos", "dinheiro", "segredos", "missoes"}
+          statuses = {"confirmado", "relatado", "em-investigacao"}
+          seen = set()
+          for p in data["points"]:
+              assert required <= p.keys(), f"Campos ausentes em {p.get('id', '?')}"
+              assert p["id"] not in seen, f"ID duplicado: {p['id']}"
+              seen.add(p["id"])
+              assert p["category"] in categories
+              assert p["status"] in statuses
+              assert isinstance(p["source"], str) and p["source"].strip()
+              if p.get("coordinates") is not None:
+                  assert isinstance(p["coordinates"], list) and len(p["coordinates"]) == 2
+          print(f"Catálogo válido: {len(data['points'])} ponto(s).")
+          PY
