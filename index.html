@@ -31,6 +31,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#1a1e26;color:#f4f5f7}.leaflet-container a{color:var(--accent)}
 .pin-icon{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border:2px solid rgba(255,255,255,.9);border-radius:50% 50% 50% 4px;transform:rotate(-45deg);box-shadow:0 2px 7px #0009;font-size:15px}
 .pin-icon span{transform:rotate(45deg);line-height:1}
+.pin-icon-game{width:34px;height:38px;border:0;border-radius:0;background:transparent;box-shadow:none;transform:none}
+.pin-icon-game img{display:block;width:32px;height:32px;object-fit:contain;filter:drop-shadow(0 1px 2px #000) drop-shadow(0 0 3px #000);}
 .pin-armas{background:#c94b54}.pin-veiculos{background:#287ec0}.pin-dinheiro{background:#238653}.pin-segredos{background:#7950a8}.pin-missoes{background:#bd782c}
 .nearby-row{display:flex;align-items:center;gap:10px;margin-top:16px;padding:11px;border:1px solid var(--line);border-radius:9px;background:#141820}
 .nearby-row input{width:18px;height:18px;accent-color:var(--accent);flex:0 0 auto}
@@ -244,7 +246,8 @@ localStorage.setItem('gta6-found',JSON.stringify([...found]));renderFinancePanel
 }));
 }
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const pinMeta={armas:{emoji:'🔫',cls:'pin-armas'},veiculos:{emoji:'🚗',cls:'pin-veiculos'},dinheiro:{emoji:'💰',cls:'pin-dinheiro'},segredos:{emoji:'🔎',cls:'pin-segredos'},missoes:{emoji:'🎯',cls:'pin-missoes'}};
+const pinMeta={armas:{asset:'filter_weapons',label:'Armas'},veiculos:{asset:'filter_vehicles',label:'Veículos'},dinheiro:{asset:'filter_opportunities_cash',label:'Dinheiro'},segredos:{asset:'filter_exploration',label:'Segredos'},missoes:{asset:'filter_activities',label:'Atividades'}};
+const gameIconBase='https://six.mics.dev/explorer/assets/ui_art/menu_icons/';
 function render(){
 const q=document.getElementById('search').value.toLocaleLowerCase('pt-BR'),cat=document.getElementById('category').value,ev=document.getElementById('evidence').value;
 const nearby=document.getElementById('nearbyOnly').checked,radius=Number(document.getElementById('nearbyRadius').value),center=map.getCenter();
@@ -252,8 +255,8 @@ const filtered=points.filter(p=>(!cat||p.category===cat)&&(!ev||p.status===ev)&&
 markers.clearLayers();
 filtered.forEach(p=>{
 if(Array.isArray(p.coordinates)&&p.coordinates.length===2){
-const meta=pinMeta[p.category]||{emoji:'📍',cls:'pin-segredos'};
-const icon=L.divIcon({className:'',html:'<div class="pin-icon '+meta.cls+'"><span>'+meta.emoji+'</span></div>',iconSize:[30,30],iconAnchor:[15,27],popupAnchor:[0,-25]});
+const meta=pinMeta[p.category]||{asset:'filter_exploration',label:'Ponto'};
+const icon=L.divIcon({className:'',html:'<div class="pin-icon pin-icon-game"><img src="'+gameIconBase+meta.asset+'.webp" alt="'+meta.label+'" loading="lazy"></div>',iconSize:[34,38],iconAnchor:[17,34],popupAnchor:[0,-32]});
 L.marker(p.coordinates,{icon}).bindPopup('<b>'+esc(p.name)+'</b><br>'+esc(p.description)+'<br><small>'+esc(p.area||'Leonida')+' · '+esc(statuses[p.status]||p.status)+'</small><br><small>Coordenadas do catálogo: '+p.coordinates[1].toFixed(4)+', '+(-p.coordinates[0]).toFixed(4)+'</small>').addTo(markers);
 }
 });
