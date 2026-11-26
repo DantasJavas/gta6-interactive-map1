@@ -23,6 +23,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 @media(orientation:landscape) and (max-height:600px){header{padding:10px 16px}.layout{min-height:calc(100vh - 60px)}#map{height:calc(100vh - 60px);min-height:300px}aside{padding:12px}}
 @media(hover:none) and (pointer:coarse){button{min-height:46px}input,select{min-height:46px}.leaflet-control-zoom a{width:42px!important;height:42px!important;line-height:42px!important}}
 
+.map-name{background:transparent;border:0;white-space:nowrap;pointer-events:none}
+.map-name span{display:inline-block;transform:translate(-50%,-50%);padding:2px 5px;border-radius:4px;font-weight:750;letter-spacing:.045em;text-align:center;text-shadow:-1px -1px 2px #101318,1px -1px 2px #101318,-1px 1px 2px #101318,1px 1px 2px #101318,0 0 5px #101318}
+.map-region span{font-size:14px;color:#f4dca7;text-transform:uppercase;letter-spacing:.08em}
+.map-locality span{font-size:11px;color:#f4f5f7;font-weight:650}
+@media(max-width:760px){.map-region span{font-size:12px}.map-locality span{font-size:10px}}
 .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#1a1e26;color:#f4f5f7}.leaflet-container a{color:var(--accent)}
 .pin-icon{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border:2px solid rgba(255,255,255,.9);border-radius:50% 50% 50% 4px;transform:rotate(-45deg);box-shadow:0 2px 7px #0009;font-size:15px}
 .pin-icon span{transform:rotate(45deg);line-height:1}
@@ -94,6 +99,53 @@ const baseLayers={'☀️ Dia':dayLayer,'🌙 Noite':nightLayer};
 L.control.layers(baseLayers,null,{position:'topright',collapsed:true}).addTo(map);
 map.on('baselayerchange',e=>{try{localStorage.setItem('gta6-map-style',e.layer===nightLayer?'night':'day')}catch(err){}});
 const bounds=[[-1024,0],[0,1024]];map.fitBounds(bounds);
+const regionLabels=L.layerGroup().addTo(map),localityLabels=L.layerGroup().addTo(map);
+const regionBoundaries=L.layerGroup();
+const regionNameSet=new Set();
+const roadSuffix=/(?:\b(?:st|street|dr|drive|ave|avenue|blvd|boulevard|rd|road|hwy|highway|pkwy|parkway|way|ln|lane|ct|court|trl|trail)\.?$)/i;
+function makePlaceLabel(name,kind){
+const className=kind==='region'?'map-name map-region':'map-name map-locality';
+return L.divIcon({className,html:'<span>'+name.replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))+'</span>',iconSize:null});
+}
+function refreshPlaceLabels(){
+const z=map.getZoom();
+regionLabels.clearLayers();localityLabels.clearLayers();
+if(z<4.35)regionLabels.eachLayer(()=>{});
+if(z<4.35)regionLabelData.forEach(p=>L.marker([-p.y,p.x],{icon:makePlaceLabel(p.name,'region'),interactive:false,keyboard:false,zIndexOffset:-1000}).addTo(regionLabels));
+if(z>=4.15)localityLabelData.forEach(p=>L.marker([-p.y,p.x],{icon:makePlaceLabel(p.name,'locality'),interactive:false,keyboard:false,zIndexOffset:-900}).addTo(localityLabels));
+}
+let regionLabelData=[],localityLabelData=[];
+(async()=>{
+try{
+const [lr,pr,dr]=await Promise.all([
+fetch(`${BASE}/data/labels.json`),fetch(`${BASE}/data/places.json`),fetch(`${BASE}/data/districts.json`)
+]);
+if(!lr.ok||!pr.ok||!dr.ok)throw Error('Dados de localidades indisponíveis');
+const [labels,places,districts]=await Promise.all([lr.json(),pr.json(),dr.json()]);
+regionLabelData=labels.filter(p=>p.name&&Number.isFinite(p.x)&&Number.isFinite(p.y));
+regionLabelData.forEach(p=>regionNameSet.add(p.name.toLocaleLowerCase('pt-BR')));
+const grouped=new Map();
+places.forEach(p=>{
+if(!p.area||!Number.isFinite(Number(p.x))||!Number.isFinite(Number(p.y)))return;
+const parts=p.area.split(',').map(s=>s.trim()).filter(Boolean);
+let name=parts[0]||'';
+if(roadSuffix.test(name)&&parts.length>1)name=parts[1];
+if(!name||regionNameSet.has(name.toLocaleLowerCase('pt-BR')))return;
+const key=name.toLocaleLowerCase('pt-BR');
+if(!grouped.has(key))grouped.set(key,{name,x:0,y:0,count:0});
+const g=grouped.get(key);g.x+=Number(p.x);g.y+=Number(p.y);g.count++;
+});
+localityLabelData=[...grouped.values()].filter(g=>g.count>=3).map(g=>({name:g.name,x:g.x/g.count,y:g.y/g.count}));
+districts.forEach(d=>{
+if(!Array.isArray(d.rings))return;
+const rings=d.rings.map(r=>r.map(([x,y])=>[-y,x]));
+L.polygon(rings,{color:'#d9c28c',weight:1.15,opacity:.48,fill:false,dashArray:'5 6',interactive:false}).addTo(regionBoundaries);
+});
+regionBoundaries.addTo(map);
+refreshPlaceLabels();
+map.on('zoomend',refreshPlaceLabels);
+}catch(error){console.warn('Não foi possível carregar nomes de regiões/localidades',error)}
+})();
 const overlayLayers={};
 const vectorLayers=L.control.layers(null,overlayLayers,{position:'topright',collapsed:true});
 vectorLayers.addTo(map);
