@@ -10,13 +10,19 @@
 :root{color-scheme:dark;--bg:#111318;--panel:#1a1e26;--line:#303744;--muted:#aab2c0;--accent:#d9b66f}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f4f5f7;font:15px system-ui,-apple-system,Segoe UI,sans-serif}
 header{padding:18px 20px;border-bottom:1px solid var(--line);background:#151820}h1{font-size:clamp(20px,4vw,28px);margin:0 0 5px}header p{margin:0;color:var(--muted)}
-.layout{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 84px)}aside{padding:18px;border-right:1px solid var(--line);background:var(--panel)}
-#map{height:calc(100vh - 84px);min-height:520px;background:#242a32}
-label{display:block;font-weight:600;margin:15px 0 7px}input,select{width:100%;padding:11px;border-radius:8px;border:1px solid var(--line);background:#11151c;color:white}
+.layout{display:grid;grid-template-columns:minmax(280px,340px) minmax(0,1fr);min-height:calc(100vh - 84px)}aside{padding:18px;border-right:1px solid var(--line);background:var(--panel);min-width:0}
+#map{height:calc(100vh - 84px);min-height:520px;background:#242a32;min-width:0;touch-action:pan-x pan-y}
+label{display:block;font-weight:600;margin:15px 0 7px}input,select{width:100%;min-height:44px;padding:11px;border-radius:8px;border:1px solid var(--line);background:#11151c;color:white;font:inherit}
 .hint{font-size:13px;line-height:1.5;color:var(--muted)}.status{padding:12px;border:1px solid #665633;background:#292419;border-radius:9px;color:#f1d79e;font-size:13px;line-height:1.45}
 #results{margin-top:16px;display:grid;gap:9px}.item{padding:11px;border:1px solid var(--line);border-radius:9px;background:#141820}.item strong{display:block;margin-bottom:4px}.item small{color:var(--muted)}
 .empty{padding:14px;border:1px dashed var(--line);border-radius:9px;color:var(--muted);line-height:1.5}
-button{padding:8px 10px;border-radius:7px;border:1px solid var(--line);background:#292f3a;color:white}
+button{min-height:42px;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:#292f3a;color:white;font:inherit;touch-action:manipulation}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(min-width:761px) and (max-width:1100px){.layout{grid-template-columns:minmax(260px,310px) minmax(0,1fr)}aside{padding:14px}#map{height:calc(100vh - 84px);min-height:480px}}
+@media(min-width:761px) and (max-width:900px){.layout{grid-template-columns:260px minmax(0,1fr)}}
+@media(orientation:landscape) and (max-height:600px){header{padding:10px 16px}.layout{min-height:calc(100vh - 60px)}#map{height:calc(100vh - 60px);min-height:300px}aside{padding:12px}}
+@media(hover:none) and (pointer:coarse){button{min-height:46px}input,select{min-height:46px}.leaflet-control-zoom a{width:42px!important;height:42px!important;line-height:42px!important}}
+
 .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#1a1e26;color:#f4f5f7}.leaflet-container a{color:var(--accent)}
 .pin-icon{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border:2px solid rgba(255,255,255,.9);border-radius:50% 50% 50% 4px;transform:rotate(-45deg);box-shadow:0 2px 7px #0009;font-size:15px}
 .pin-icon span{transform:rotate(45deg);line-height:1}
@@ -27,7 +33,10 @@ button{padding:8px 10px;border-radius:7px;border:1px solid var(--line);backgroun
 .legend{display:flex;flex-wrap:wrap;gap:8px 12px;margin:12px 0;color:var(--muted);font-size:12px}
 .legend span{display:inline-flex;align-items:center;gap:5px}.legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
 .result-count{font-size:12px;color:var(--muted);margin:12px 0 6px}
-@media(max-width:760px){.layout{grid-template-columns:1fr}aside{border-right:0;border-bottom:1px solid var(--line)}#map{height:55vh;min-height:360px;grid-row:1}header{padding:15px}}
+@media(max-width:760px){.layout{grid-template-columns:minmax(0,1fr);min-height:0}aside{border-right:0;border-bottom:1px solid var(--line);padding:14px;order:2}#map{height:62vh;height:62dvh;min-height:340px;max-height:680px;grid-row:auto;order:1}header{padding:13px 15px}header p{font-size:13px}#results{grid-template-columns:1fr}.legend{gap:7px 10px}}
+@media(max-width:760px) and (orientation:landscape){.layout{grid-template-columns:minmax(220px,34%) minmax(0,1fr)}#map{height:calc(100dvh - 65px);min-height:260px;max-height:none;order:2}aside{order:1;max-height:calc(100dvh - 65px);overflow:auto;border-bottom:0;border-right:1px solid var(--line);padding:10px}header{padding:8px 12px}header p{display:none}}
+@media(min-width:761px){.layout{align-items:stretch}aside{overflow-y:auto;max-height:calc(100vh - 84px)}#map{position:sticky;top:0}}
+@supports(height:100dvh){@media(max-width:760px) and (orientation:portrait){#map{height:62dvh}}}
 </style>
 </head>
 <body>
@@ -45,7 +54,7 @@ button{padding:8px 10px;border-radius:7px;border:1px solid var(--line);backgroun
 <div id="results"><div class="empty">Carregando catálogo…</div></div>
 <p class="hint">Seu progresso é salvo neste navegador. A sincronização entre dispositivos será adicionada numa etapa futura.</p>
 </aside>
-<main id="map" aria-label="Mapa interativo"></main>
+<main id="map" role="application" aria-label="Mapa interativo de Leonida. Use dois dedos para ampliar e arraste para navegar."></main>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script>
