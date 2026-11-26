@@ -93,16 +93,12 @@ body.image-zoom-active{overflow:hidden}
 </aside>
 <main id="map" role="application" aria-label="Mapa interativo de Leonida. Use dois dedos para ampliar e arraste para navegar."></main>
 </div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="">
-const imageZoom=document.getElementById('imageZoom');
-const imageZoomPhoto=document.getElementById('imageZoomPhoto');
-function closeImageZoom(){imageZoom.classList.remove('is-open');document.body.classList.remove('image-zoom-active');imageZoomPhoto.removeAttribute('src')}
-function openImageZoom(img){if(!img||!img.src)return;imageZoomPhoto.src=img.currentSrc||img.src;imageZoomPhoto.alt=img.alt||'Imagem ampliada';imageZoom.classList.add('is-open');document.body.classList.add('image-zoom-active')}
-document.addEventListener('click',event=>{const img=event.target.closest('.popup-item-image,.item-detail-shot');if(img){event.preventDefault();openImageZoom(img)}});
-document.getElementById('imageZoomClose').addEventListener('click',closeImageZoom);
-imageZoom.addEventListener('click',event=>{if(event.target===imageZoom)closeImageZoom()});
-document.addEventListener('keydown',event=>{if(event.key==='Escape'&&imageZoom.classList.contains('is-open'))closeImageZoom()});
-</script>
+<div id="imageZoom" class="image-zoom" role="dialog" aria-modal="true" aria-label="Imagem ampliada">
+<button type="button" class="image-zoom-close" id="imageZoomClose" aria-label="Fechar imagem ampliada">×</button>
+<img id="imageZoomPhoto" alt="Imagem ampliada">
+<div class="image-zoom-hint">Toque fora da imagem ou no × para fechar</div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script>
 (async()=>{
 const BASE='https://fbritoferreira.github.io/gta6';
@@ -242,5 +238,14 @@ document.getElementById('catalogStatus').textContent='📍 '+points.length+' pon
 render();
 }catch(e){document.getElementById('catalogStatus').textContent='⚠️ Não foi possível buscar o catálogo comunitário. Verifique a conexão e tente atualizar a página.';document.getElementById('results').innerHTML='<div class="empty">Falha ao carregar os pontos externos. Os filtros não terão resultados até o catálogo ser carregado.</div>'}
 })();
+
+const imageZoom=document.getElementById('imageZoom');
+const imageZoomPhoto=document.getElementById('imageZoomPhoto');
+function closeImageZoom(){imageZoom.classList.remove('is-open');document.body.classList.remove('image-zoom-active');imageZoomPhoto.removeAttribute('src')}
+function openImageZoom(img){if(!img||!img.src)return;imageZoomPhoto.src=img.currentSrc||img.src;imageZoomPhoto.alt=img.alt||'Imagem ampliada';imageZoom.classList.add('is-open');document.body.classList.add('image-zoom-active')}
+document.addEventListener('click',event=>{const img=event.target.closest('.popup-item-image,.item-detail-shot');if(img){event.preventDefault();openImageZoom(img)}});
+document.getElementById('imageZoomClose').addEventListener('click',closeImageZoom);
+imageZoom.addEventListener('click',event=>{if(event.target===imageZoom)closeImageZoom()});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&imageZoom.classList.contains('is-open'))closeImageZoom()});
 </script>
 </body></html>
