@@ -52,7 +52,14 @@ button{padding:8px 10px;border-radius:7px;border:1px solid var(--line);backgroun
 (async()=>{
 const BASE='https://fbritoferreira.github.io/gta6';
 const map=L.map('map',{crs:L.CRS.Simple,minZoom:0,maxZoom:7});
-L.tileLayer(`${BASE}/tiles/night/{z}/{z},{y},{x}.webp`,{tileSize:256,maxNativeZoom:5,noWrap:true,attribution:'Map data: Open GTA 6 Map (fbritoferreira), CC BY 4.0 · <a href="https://github.com/fbritoferreira/gta6" target="_blank" rel="noopener">créditos</a>'}).addTo(map);
+const attribution='Map data: Open GTA 6 Map (fbritoferreira), CC BY 4.0 · <a href="https://github.com/fbritoferreira/gta6" target="_blank" rel="noopener">créditos</a>';
+const dayLayer=L.tileLayer(`${BASE}/tiles/day/{z}/{z},{y},{x}.webp`,{tileSize:256,maxNativeZoom:5,maxZoom:7,noWrap:true,keepBuffer:4,updateWhenIdle:true,attribution});
+const nightLayer=L.tileLayer(`${BASE}/tiles/night/{z}/{z},{y},{x}.webp`,{tileSize:256,maxNativeZoom:5,maxZoom:7,noWrap:true,keepBuffer:4,updateWhenIdle:true,attribution});
+let savedStyle='day';try{savedStyle=localStorage.getItem('gta6-map-style')||'day'}catch(e){}
+const baseLayers={'☀️ Dia':dayLayer,'🌙 Noite':nightLayer};
+(savedStyle==='night'?nightLayer:dayLayer).addTo(map);
+L.control.layers(baseLayers,null,{position:'topright',collapsed:true}).addTo(map);
+map.on('baselayerchange',e=>{try{localStorage.setItem('gta6-map-style',e.layer===nightLayer?'night':'day')}catch(err){}});
 const bounds=[[-1024,0],[0,1024]];map.fitBounds(bounds);
 const markers=L.layerGroup().addTo(map);let points=[];const pointRenderer=L.canvas({padding:0.5});const found=new Set(JSON.parse(localStorage.getItem('gta6-found')||'[]'));
 const cats={armas:'Armas e equipamentos',veiculos:'Veículos raros/de luxo',dinheiro:'Dinheiro e tesouros',segredos:'Segredos e locais especiais',missoes:'Missões e atividades'};
