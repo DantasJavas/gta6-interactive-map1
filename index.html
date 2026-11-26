@@ -14,7 +14,7 @@ header{padding:18px 20px;border-bottom:1px solid var(--line);background:#151820}
 #map{height:calc(100vh - 84px);min-height:520px;background:#242a32;min-width:0;touch-action:pan-x pan-y}
 label{display:block;font-weight:600;margin:15px 0 7px}input,select{width:100%;min-height:44px;padding:11px;border-radius:8px;border:1px solid var(--line);background:#11151c;color:white;font:inherit}
 .hint{font-size:13px;line-height:1.5;color:var(--muted)}.status{padding:12px;border:1px solid #665633;background:#292419;border-radius:9px;color:#f1d79e;font-size:13px;line-height:1.45}
-#results{margin-top:16px;display:grid;gap:9px}.item{padding:11px;border:1px solid var(--line);border-radius:9px;background:#141820}.item strong{display:block;margin-bottom:4px}.item small{color:var(--muted)}
+#results{margin-top:16px;display:grid;gap:9px}.item{padding:11px;border:1px solid var(--line);border-radius:9px;background:#141820}.item strong{display:block;margin-bottom:4px}.item small{color:var(--muted)}.item-main{display:flex;align-items:center;gap:11px}.item-thumb{width:58px;height:58px;flex:0 0 58px;object-fit:contain;padding:5px;border:1px solid var(--line);border-radius:8px;background:#10151c}.item-copy{min-width:0}.item-copy strong{margin-bottom:5px}
 .empty{padding:14px;border:1px dashed var(--line);border-radius:9px;color:var(--muted);line-height:1.5}
 button{min-height:42px;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:#292f3a;color:white;font:inherit;touch-action:manipulation}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -54,30 +54,6 @@ aside{padding:13px}
 .status{padding:9px 10px;font-size:12px}
 .result-count{font-size:12px;color:var(--muted);margin:10px 0 6px}
 .item-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}.item-actions button{flex:1 1 125px}
-.finance-panel{margin:12px 0;padding:12px;border:1px solid #665633;border-radius:10px;background:linear-gradient(145deg,#24251f,#171c20)}
-.finance-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;list-style:none}.finance-heading::-webkit-details-marker{display:none}.finance-panel[open] .finance-heading{padding-bottom:10px;border-bottom:1px solid var(--line)}
-.finance-heading strong{display:block;font-size:14px}.finance-heading small,.finance-panel small{color:var(--muted);font-size:11px}
-.finance-currency{font-size:10px;letter-spacing:.08em;padding:4px 7px;border:1px solid #665633;border-radius:5px;color:#f1d79e}
-.finance-total{margin:12px 0 8px;padding:10px;border-radius:8px;background:#101812}
-.finance-total strong{display:block;font-size:23px;color:#a5e2ad;font-variant-numeric:tabular-nums}
-.finance-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.finance-stats>div{padding:8px;border-radius:7px;background:#141820}
-.finance-stats strong{display:block;margin-top:3px;font-size:14px;font-variant-numeric:tabular-nums}
-.finance-unpriced{margin:9px 0;color:#e5c98c;font-size:11px;line-height:1.4}
-.finance-regions{display:grid;gap:7px;margin-top:9px}
-.finance-region{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#141820}
-.finance-region summary{cursor:pointer;padding:9px;display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:12px;font-weight:650;list-style:none}
-.finance-region summary::-webkit-details-marker{display:none}
-.finance-region summary span:last-child{color:#a5e2ad;font-variant-numeric:tabular-nums}
-.finance-place{padding:10px;border-top:1px solid var(--line);display:grid;gap:7px}.finance-checkline{display:flex;align-items:center;gap:9px;padding:8px 9px;border:1px solid var(--line);border-radius:7px;background:#101820;cursor:pointer}.finance-checkline:has(input:checked){border-color:#43875a;background:#13251b}.finance-checkline input{width:20px;height:20px;min-height:0;accent-color:#65bd79;flex:0 0 auto}.finance-checktext{display:flex;flex-direction:column;gap:2px}.finance-checktext strong{font-size:12px;color:#e9edf1}.finance-checktext small{font-size:10px;color:var(--muted)}.finance-place.is-collected .finance-place-name{text-decoration:line-through;opacity:.72}
-.finance-place-name{font-size:12px;font-weight:600}
-.finance-place-area{font-size:10px;color:var(--muted)}
-.finance-place-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;align-items:center}
-.finance-place input[type=number]{min-width:0;min-height:36px;padding:6px 8px;font-size:13px}
-.finance-collected{display:none}
-.finance-place-value{font-size:11px;color:#a5e2ad}
-.finance-empty{padding:9px;color:var(--muted);font-size:11px;line-height:1.4}
-@media(max-width:760px){.finance-panel{margin:10px 0}.finance-total strong{font-size:25px}}
 .leaflet-control-scale-line{background:#17202acc;color:#f4f5f7;border-color:#d9b66f;text-shadow:none;font-size:11px}
 .leaflet-control-layers{background:#1a1e26;color:#f4f5f7;border:1px solid var(--line);border-radius:8px}.leaflet-control-layers-separator{border-top-color:var(--line)}
 @media(max-width:420px){.item-actions button{flex-basis:100%}}
@@ -94,21 +70,13 @@ aside{padding:13px}
 <div class="status" id="catalogStatus">📡 Carregando pontos comunitários do mapa de Leonida… Os locais importados aparecem como “Relatado” até serem verificados.</div>
 <details class="filter-panel"><summary>⚙️ Filtros e categorias <span>Toque para abrir</span></summary><div class="filter-content">
 <label for="search">Pesquisar ponto</label><input id="search" type="search" placeholder="Nome ou descrição…">
-<label for="category">Categoria</label><select id="category"><option value="">Todas as categorias</option><option value="armas">Armas e equipamentos</option><option value="veiculos">Veículos raros/de luxo</option><option value="dinheiro">Dinheiro e tesouros</option><option value="segredos">Segredos e locais especiais</option><option value="missoes">Missões e atividades</option></select>
+<label for="category">Categoria</label><select id="category"><option value="" selected>Selecione uma categoria</option><option value="armas">Armas e equipamentos</option><option value="veiculos">Veículos raros/de luxo</option><option value="dinheiro">Dinheiro e tesouros</option><option value="segredos">Segredos e locais especiais</option><option value="missoes">Missões e atividades</option></select>
 <label for="evidence">Verificação</label><select id="evidence"><option value="">Todos os status</option><option value="confirmado">Confirmado</option><option value="relatado">Relatado</option><option value="em-investigacao">Em investigação</option></select>
 <div class="nearby-row"><input id="nearbyOnly" type="checkbox"><label for="nearbyOnly">Mostrar somente pontos próximos ao centro do mapa</label></div>
 <label for="nearbyRadius">Raio de proximidade</label><select id="nearbyRadius"><option value="30">Curto</option><option value="60" selected>Médio</option><option value="120">Amplo</option><option value="240">Muito amplo</option></select>
 <div class="legend"><span><i style="background:#c94b54"></i>🔫 Armas</span><span><i style="background:#287ec0"></i>🚗 Veículos</span><span><i style="background:#238653"></i>💰 Dinheiro</span><span><i style="background:#7950a8"></i>🔎 Segredos</span><span><i style="background:#bd782c"></i>🎯 Missões</span></div>
 </div></details>
-<details class="finance-panel" aria-label="Calculadora financeira">
-<summary class="finance-heading"><div><strong>💰 Calculadora financeira</strong><small>Toque para abrir ou fechar · Valores por local e por região</small></div><span class="finance-currency">USD</span></summary>
-<div class="finance-total"><small>Total cadastrado</small><strong id="financeTotal">US$ 0,00</strong></div>
-<div class="finance-stats"><div><small>Já coletado</small><strong id="financeCollected">US$ 0,00</strong></div><div><small>Disponível</small><strong id="financeAvailable">US$ 0,00</strong></div></div>
-<div class="finance-stats" style="margin-top:8px"><div><small>Locais coletados</small><strong id="financeDoneCount">0</strong></div><div><small>Locais pendentes</small><strong id="financePendingCount">0</strong></div></div>
-<div class="finance-unpriced" id="financeUnpriced">Aguardando catálogo de dinheiro…</div>
-<div id="financeRegions" class="finance-regions"><div class="empty">Carregando locais financeiros…</div></div>
-<p class="hint">Cadastre o valor observado em cada local. Valores não informados não entram na soma. Os dados ficam salvos neste navegador.</p>
-</details>
+
 <div id="resultCount" class="result-count">Carregando pontos…</div>
 <div id="results"><div class="empty">Carregando catálogo…</div></div>
 <p class="hint">Seu progresso é salvo neste navegador. A sincronização entre dispositivos será adicionada numa etapa futura.</p>
@@ -207,51 +175,13 @@ addVectorLayer('rails.json','Ferrovias',()=>({color:'#bd9be8',weight:1.2,opacity
 const markers=L.layerGroup().addTo(map);let points=[];const pointRenderer=L.canvas({padding:0.5});const found=new Set(JSON.parse(localStorage.getItem('gta6-found')||'[]'));
 const cats={armas:'Armas e equipamentos',veiculos:'Veículos raros/de luxo',dinheiro:'Dinheiro e tesouros',segredos:'Segredos e locais especiais',missoes:'Missões e atividades'};
 const statuses={confirmado:'Confirmado',relatado:'Relatado','em-investigacao':'Em investigação'};
-const moneyKinds=new Set(['bank','smash','safe','towatm','payday','treasure']);
-let financeValues={};try{financeValues=JSON.parse(localStorage.getItem('gta6-finance-values')||'{}')}catch(e){}
-const moneyFmt=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'USD'});
-function financeRegion(p){const parts=String(p.area||'').split(',').map(s=>s.trim()).filter(Boolean);return p.region||parts[parts.length-1]||'Região não identificada'}
-function renderFinancePanel(){
-const items=points.filter(p=>p.category==='dinheiro'&&Array.isArray(p.coordinates));
-const priced=items.filter(p=>Number.isFinite(Number(financeValues[p.id]))&&String(financeValues[p.id]).trim()!=='');
-const total=priced.reduce((s,p)=>s+Number(financeValues[p.id]),0);
-const collected=priced.filter(p=>found.has(p.id)).reduce((s,p)=>s+Number(financeValues[p.id]),0);
-const available=total-collected;
-const doneCount=items.filter(p=>found.has(p.id)).length;
-document.getElementById('financeDoneCount').textContent=doneCount;
-document.getElementById('financePendingCount').textContent=items.length-doneCount;
-document.getElementById('financeTotal').textContent=moneyFmt.format(total);
-document.getElementById('financeCollected').textContent=moneyFmt.format(collected);
-document.getElementById('financeAvailable').textContent=moneyFmt.format(available);
-document.getElementById('financeUnpriced').textContent=items.length?items.filter(p=>!Number.isFinite(Number(financeValues[p.id]))||String(financeValues[p.id]).trim()==='').length+' de '+items.length+' locais ainda sem valor cadastrado.': 'Nenhum ponto financeiro foi carregado no catálogo.';
-const groups=new Map();
-items.forEach(p=>{const region=financeRegion(p);if(!groups.has(region))groups.set(region,[]);groups.get(region).push(p)});
-const root=document.getElementById('financeRegions');
-root.innerHTML=groups.size?[...groups.entries()].sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).map(([region,group])=>{
-const sum=group.reduce((s,p)=>s+(Number.isFinite(Number(financeValues[p.id]))&&String(financeValues[p.id]).trim()!==''?Number(financeValues[p.id]):0),0);
-return '<details class="finance-region"><summary><span>'+esc(region)+' · '+group.length+' local(is)</span><span>'+moneyFmt.format(sum)+'</span></summary>'+group.slice().sort((a,b)=>a.name.localeCompare(b.name,'pt-BR')).map(p=>{
-const raw=financeValues[p.id]??'';
-const valid=String(raw).trim()!==''&&Number.isFinite(Number(raw))&&Number(raw)>=0;
-return '<div class="finance-place '+(found.has(p.id)?'is-collected':'')+'"><div><div class="finance-place-name">'+esc(p.name)+'</div><div class="finance-place-area">'+esc(p.area||region)+' · '+esc(p.id)+'</div></div><label class="finance-checkline"><input type="checkbox" data-finance-found="'+esc(p.id)+'" '+(found.has(p.id)?'checked':'')+'><span class="finance-checktext"><strong>'+(found.has(p.id)?'Coletado':'Ainda não coletado')+'</strong><small>'+(found.has(p.id)?'Este local já foi concluído':'Marque aqui quando pegar o dinheiro')+'</small></span></label><div class="finance-place-row"><input type="number" min="0" step="0.01" inputmode="decimal" placeholder="Valor em US$" aria-label="Valor em dólares para '+esc(p.name)+'" data-finance-value="'+esc(p.id)+'" value="'+esc(raw)+'"></div><div class="finance-place-value">'+(valid?moneyFmt.format(Number(raw)):'Valor não cadastrado')+'</div></div>';
-}).join('')+'</details>';
-}).join(''):'<div class="finance-empty">Os locais financeiros aparecerão aqui quando o catálogo for carregado.</div>';
-root.querySelectorAll('[data-finance-value]').forEach(input=>input.addEventListener('change',()=>{
-const id=input.dataset.financeValue,raw=input.value.trim();
-if(raw===''||!Number.isFinite(Number(raw))||Number(raw)<0)delete financeValues[id];else financeValues[id]=Number(raw);
-localStorage.setItem('gta6-finance-values',JSON.stringify(financeValues));renderFinancePanel();
-}));
-root.querySelectorAll('[data-finance-found]').forEach(input=>input.addEventListener('change',()=>{
-const id=input.dataset.financeFound;input.checked?found.add(id):found.delete(id);
-localStorage.setItem('gta6-found',JSON.stringify([...found]));renderFinancePanel();
-}));
-}
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pinMeta={armas:{asset:'filter_weapons',label:'Armas'},veiculos:{asset:'filter_vehicles',label:'Veículos'},dinheiro:{asset:'filter_opportunities_cash',label:'Dinheiro'},segredos:{asset:'filter_exploration',label:'Segredos'},missoes:{asset:'filter_activities',label:'Atividades'}};
 const gameIconBase='https://six.mics.dev/explorer/assets/ui_art/menu_icons/';
 function render(){
 const q=document.getElementById('search').value.toLocaleLowerCase('pt-BR'),cat=document.getElementById('category').value,ev=document.getElementById('evidence').value;
 const nearby=document.getElementById('nearbyOnly').checked,radius=Number(document.getElementById('nearbyRadius').value),center=map.getCenter();
-const filtered=points.filter(p=>(!cat||p.category===cat)&&(!ev||p.status===ev)&&(!q||(p.name+' '+p.description).toLocaleLowerCase('pt-BR').includes(q))&&(!nearby||Math.hypot(p.coordinates[0]-center.lat,p.coordinates[1]-center.lng)<=radius));
+const filtered=points.filter(p=>(!!cat&&p.category===cat)&&(!ev||p.status===ev)&&(!q||(p.name+' '+p.description).toLocaleLowerCase('pt-BR').includes(q))&&(!nearby||Math.hypot(p.coordinates[0]-center.lat,p.coordinates[1]-center.lng)<=radius));
 markers.clearLayers();
 filtered.forEach(p=>{
 if(Array.isArray(p.coordinates)&&p.coordinates.length===2){
@@ -263,7 +193,7 @@ L.marker(p.coordinates,{icon}).bindPopup('<b>'+esc(p.name)+'</b><br>'+esc(p.desc
 const count=document.getElementById('resultCount');
 count.textContent=filtered.length+' ponto(s) encontrado(s)'+(nearby?' perto do centro atual do mapa':'');
 const out=document.getElementById('results'),limit=80,listed=filtered.slice(0,limit);
-out.innerHTML=listed.length?listed.map(p=>'<div class="item"><strong>'+esc(p.name)+'</strong><small>'+esc(cats[p.category]||p.category)+' • '+esc(statuses[p.status]||p.status)+(found.has(p.id)?' • ✓ Encontrado':'')+'</small><p class="hint">'+esc(p.description)+'</p><div class="item-actions"><button data-view="'+esc(p.id)+'">Ver no mapa</button><button data-id="'+esc(p.id)+'">'+(found.has(p.id)?'Desmarcar encontrado':'Marcar como encontrado')+'</button></div></div>').join(''):'<div class="empty">Nenhum ponto encontrado com estes filtros. Tente aumentar o raio, mover o mapa ou limpar algum filtro.</div>';
+out.innerHTML=!cat?'<div class="empty">Selecione uma categoria nos filtros para exibir os pontos no mapa.</div>':listed.length?listed.map(p=>{const meta=pinMeta[p.category]||{asset:'filter_exploration',label:'Ponto'};return '<div class="item"><div class="item-main"><img class="item-thumb" src="'+gameIconBase+meta.asset+'.webp" alt="Ícone de '+esc(meta.label)+'" loading="lazy"><div class="item-copy"><strong>'+esc(p.name)+'</strong><small>'+esc(cats[p.category]||p.category)+' • '+esc(statuses[p.status]||p.status)+(found.has(p.id)?' • ✓ Encontrado':'')+'</small></div></div><p class="hint">'+esc(p.description)+'</p><div class="item-actions"><button data-view="'+esc(p.id)+'">Ver no mapa</button><button data-id="'+esc(p.id)+'">'+(found.has(p.id)?'Desmarcar encontrado':'Marcar como encontrado')+'</button></div></div>'}).join(''):'<div class="empty">Nenhum ponto encontrado com estes filtros. Tente aumentar o raio, mover o mapa ou limpar algum filtro.</div>';
 if(filtered.length>limit)out.innerHTML+='<p class="hint">Mostrando os primeiros '+limit+' de '+filtered.length+' resultados. Refine a pesquisa para encontrar um ponto específico.</p>';
 out.querySelectorAll('button[data-id]').forEach(b=>b.addEventListener('click',()=>{found.has(b.dataset.id)?found.delete(b.dataset.id):found.add(b.dataset.id);localStorage.setItem('gta6-found',JSON.stringify([...found]));render()}));
 out.querySelectorAll('button[data-view]').forEach(b=>b.addEventListener('click',()=>{const p=filtered.find(item=>item.id===b.dataset.view);if(!p||!Array.isArray(p.coordinates))return;map.setView(p.coordinates,Math.max(map.getZoom(),5.5),{animate:true});markers.eachLayer(marker=>{if(marker.getPopup()?.getContent()?.includes(esc(p.name)))marker.openPopup()})}));
