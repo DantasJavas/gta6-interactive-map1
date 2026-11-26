@@ -53,7 +53,7 @@ aside{padding:13px}
 .result-count{font-size:12px;color:var(--muted);margin:10px 0 6px}
 .item-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}.item-actions button{flex:1 1 125px}
 .finance-panel{margin:12px 0;padding:12px;border:1px solid #665633;border-radius:10px;background:linear-gradient(145deg,#24251f,#171c20)}
-.finance-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.finance-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;list-style:none}.finance-heading::-webkit-details-marker{display:none}.finance-panel[open] .finance-heading{padding-bottom:10px;border-bottom:1px solid var(--line)}
 .finance-heading strong{display:block;font-size:14px}.finance-heading small,.finance-panel small{color:var(--muted);font-size:11px}
 .finance-currency{font-size:10px;letter-spacing:.08em;padding:4px 7px;border:1px solid #665633;border-radius:5px;color:#f1d79e}
 .finance-total{margin:12px 0 8px;padding:10px;border-radius:8px;background:#101812}
@@ -98,15 +98,15 @@ aside{padding:13px}
 <label for="nearbyRadius">Raio de proximidade</label><select id="nearbyRadius"><option value="30">Curto</option><option value="60" selected>Médio</option><option value="120">Amplo</option><option value="240">Muito amplo</option></select>
 <div class="legend"><span><i style="background:#c94b54"></i>🔫 Armas</span><span><i style="background:#287ec0"></i>🚗 Veículos</span><span><i style="background:#238653"></i>💰 Dinheiro</span><span><i style="background:#7950a8"></i>🔎 Segredos</span><span><i style="background:#bd782c"></i>🎯 Missões</span></div>
 </div></details>
-<section class="finance-panel" aria-label="Calculadora financeira">
-<div class="finance-heading"><div><strong>💰 Calculadora financeira</strong><small>Valores por local e por região</small></div><span class="finance-currency">USD</span></div>
+<details class="finance-panel" aria-label="Calculadora financeira">
+<summary class="finance-heading"><div><strong>💰 Calculadora financeira</strong><small>Toque para abrir ou fechar · Valores por local e por região</small></div><span class="finance-currency">USD</span></summary>
 <div class="finance-total"><small>Total cadastrado</small><strong id="financeTotal">US$ 0,00</strong></div>
 <div class="finance-stats"><div><small>Já coletado</small><strong id="financeCollected">US$ 0,00</strong></div><div><small>Disponível</small><strong id="financeAvailable">US$ 0,00</strong></div></div>
 <div class="finance-stats" style="margin-top:8px"><div><small>Locais coletados</small><strong id="financeDoneCount">0</strong></div><div><small>Locais pendentes</small><strong id="financePendingCount">0</strong></div></div>
 <div class="finance-unpriced" id="financeUnpriced">Aguardando catálogo de dinheiro…</div>
 <div id="financeRegions" class="finance-regions"><div class="empty">Carregando locais financeiros…</div></div>
 <p class="hint">Cadastre o valor observado em cada local. Valores não informados não entram na soma. Os dados ficam salvos neste navegador.</p>
-</section>
+</details>
 <div id="resultCount" class="result-count">Carregando pontos…</div>
 <div id="results"><div class="empty">Carregando catálogo…</div></div>
 <p class="hint">Seu progresso é salvo neste navegador. A sincronização entre dispositivos será adicionada numa etapa futura.</p>
