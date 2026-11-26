@@ -28,7 +28,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .map-region span{font-size:14px;color:#f4dca7;text-transform:uppercase;letter-spacing:.08em}
 .map-locality span{font-size:11px;color:#f4f5f7;font-weight:650}
 @media(max-width:760px){.map-region span{font-size:12px}.map-locality span{font-size:10px}}
-.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#1a1e26;color:#f4f5f7}.leaflet-container a{color:var(--accent)}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#1a1e26;color:#f4f5f7}.leaflet-container a{color:var(--accent)}.popup-item{display:flex;align-items:flex-start;gap:11px;min-width:220px;margin-bottom:8px}.popup-item-image{width:76px;height:76px;flex:0 0 76px;object-fit:contain;padding:5px;border:1px solid #394252;border-radius:8px;background:#10151c}.popup-item-content{min-width:0}.popup-item-content b{display:block;margin-bottom:5px;font-size:14px}.popup-item-content div{font-size:13px;line-height:1.4}
 .pin-icon{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border:2px solid rgba(255,255,255,.9);border-radius:50% 50% 50% 4px;transform:rotate(-45deg);box-shadow:0 2px 7px #0009;font-size:15px}
 .pin-icon span{transform:rotate(45deg);line-height:1}
 .pin-icon-game{width:34px;height:38px;border:0;border-radius:0;background:transparent;box-shadow:none;transform:none}
@@ -176,6 +176,10 @@ const markers=L.layerGroup().addTo(map);let points=[];const pointRenderer=L.canv
 const cats={armas:'Armas e equipamentos',veiculos:'Veículos raros/de luxo',dinheiro:'Dinheiro e tesouros',segredos:'Segredos e locais especiais',missoes:'Missões e atividades'};
 const statuses={confirmado:'Confirmado',relatado:'Relatado','em-investigacao':'Em investigação'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ptTerms=[
+[/Weapon pickup/gi,'Arma para coleta'],[/Sniper Rifle/gi,'Rifle de precisão'],[/Assault Rifle/gi,'Rifle de assalto'],[/Shotgun/gi,'Espingarda'],[/Pistol/gi,'Pistola'],[/Revolver/gi,'Revólver'],[/On top of the tower there is an sniper rifle/gi,'No topo da torre há um rifle de precisão'],[/On top of the tower there is a sniper rifle/gi,'No topo da torre há um rifle de precisão'],[/On top of the tower/gi,'No topo da torre'],[/there is an /gi,'há um '],[/there is a /gi,'há um '],[/Weapon/gi,'Arma'],[/pickup/gi,'coleta'],[/Vehicle/gi,'Veículo'],[/Cash/gi,'Dinheiro'],[/Money/gi,'Dinheiro'],[/Treasure/gi,'Tesouro'],[/Safe/gi,'Cofre'],[/Store/gi,'Loja'],[/Collectible/gi,'Item colecionável'],[/Hidden/gi,'Escondido'],[/nearby/gi,'nas proximidades'],[/on the roof/gi,'no telhado'],[/inside the building/gi,'dentro do prédio']
+];
+function translateDescription(value){let out=String(value??'');ptTerms.forEach(([re,pt])=>out=out.replace(re,pt));return out;}
 const pinMeta={armas:{asset:'filter_weapons',label:'Armas'},veiculos:{asset:'filter_vehicles',label:'Veículos'},dinheiro:{asset:'filter_opportunities_cash',label:'Dinheiro'},segredos:{asset:'filter_exploration',label:'Segredos'},missoes:{asset:'filter_activities',label:'Atividades'}};
 const gameIconBase='https://six.mics.dev/explorer/assets/ui_art/menu_icons/';
 function render(){
@@ -187,7 +191,7 @@ filtered.forEach(p=>{
 if(Array.isArray(p.coordinates)&&p.coordinates.length===2){
 const meta=pinMeta[p.category]||{asset:'filter_exploration',label:'Ponto'};
 const icon=L.divIcon({className:'',html:'<div class="pin-icon pin-icon-game"><img src="'+gameIconBase+meta.asset+'.webp" alt="'+meta.label+'" loading="lazy"></div>',iconSize:[34,38],iconAnchor:[17,34],popupAnchor:[0,-32]});
-L.marker(p.coordinates,{icon}).bindPopup('<b>'+esc(p.name)+'</b><br>'+esc(p.description)+'<br><small>'+esc(p.area||'Leonida')+' · '+esc(statuses[p.status]||p.status)+'</small><br><small>Coordenadas do catálogo: '+p.coordinates[1].toFixed(4)+', '+(-p.coordinates[0]).toFixed(4)+'</small>').addTo(markers);
+L.marker(p.coordinates,{icon}).bindPopup('<div class="popup-item"><img class="popup-item-image" src="'+gameIconBase+meta.asset+'.webp" alt="Ícone de '+esc(meta.label)+'" loading="lazy"><div class="popup-item-content"><b>'+esc(translateDescription(p.name))+'</b><div>'+esc(translateDescription(p.description))+'</div></div></div><small>'+esc(p.area||'Leonida')+' · '+esc(statuses[p.status]||p.status)+'</small><br><small>Coordenadas do catálogo: '+p.coordinates[1].toFixed(4)+', '+(-p.coordinates[0]).toFixed(4)+'</small>').addTo(markers);
 }
 });
 const count=document.getElementById('resultCount');
