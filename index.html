@@ -67,13 +67,12 @@ aside{padding:13px}
 .finance-region summary{cursor:pointer;padding:9px;display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:12px;font-weight:650;list-style:none}
 .finance-region summary::-webkit-details-marker{display:none}
 .finance-region summary span:last-child{color:#a5e2ad;font-variant-numeric:tabular-nums}
-.finance-place{padding:9px;border-top:1px solid var(--line);display:grid;gap:6px}
+.finance-place{padding:10px;border-top:1px solid var(--line);display:grid;gap:7px}.finance-checkline{display:flex;align-items:center;gap:9px;padding:8px 9px;border:1px solid var(--line);border-radius:7px;background:#101820;cursor:pointer}.finance-checkline:has(input:checked){border-color:#43875a;background:#13251b}.finance-checkline input{width:20px;height:20px;min-height:0;accent-color:#65bd79;flex:0 0 auto}.finance-checktext{display:flex;flex-direction:column;gap:2px}.finance-checktext strong{font-size:12px;color:#e9edf1}.finance-checktext small{font-size:10px;color:var(--muted)}.finance-place.is-collected .finance-place-name{text-decoration:line-through;opacity:.72}
 .finance-place-name{font-size:12px;font-weight:600}
 .finance-place-area{font-size:10px;color:var(--muted)}
 .finance-place-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;align-items:center}
 .finance-place input[type=number]{min-width:0;min-height:36px;padding:6px 8px;font-size:13px}
-.finance-collected{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);white-space:nowrap}
-.finance-collected input{width:16px;height:16px;min-height:0;accent-color:#65bd79}
+.finance-collected{display:none}
 .finance-place-value{font-size:11px;color:#a5e2ad}
 .finance-empty{padding:9px;color:var(--muted);font-size:11px;line-height:1.4}
 @media(max-width:760px){.finance-panel{margin:10px 0}.finance-total strong{font-size:25px}}
@@ -103,6 +102,7 @@ aside{padding:13px}
 <div class="finance-heading"><div><strong>💰 Calculadora financeira</strong><small>Valores por local e por região</small></div><span class="finance-currency">USD</span></div>
 <div class="finance-total"><small>Total cadastrado</small><strong id="financeTotal">US$ 0,00</strong></div>
 <div class="finance-stats"><div><small>Já coletado</small><strong id="financeCollected">US$ 0,00</strong></div><div><small>Disponível</small><strong id="financeAvailable">US$ 0,00</strong></div></div>
+<div class="finance-stats" style="margin-top:8px"><div><small>Locais coletados</small><strong id="financeDoneCount">0</strong></div><div><small>Locais pendentes</small><strong id="financePendingCount">0</strong></div></div>
 <div class="finance-unpriced" id="financeUnpriced">Aguardando catálogo de dinheiro…</div>
 <div id="financeRegions" class="finance-regions"><div class="empty">Carregando locais financeiros…</div></div>
 <p class="hint">Cadastre o valor observado em cada local. Valores não informados não entram na soma. Os dados ficam salvos neste navegador.</p>
@@ -215,6 +215,9 @@ const priced=items.filter(p=>Number.isFinite(Number(financeValues[p.id]))&&Strin
 const total=priced.reduce((s,p)=>s+Number(financeValues[p.id]),0);
 const collected=priced.filter(p=>found.has(p.id)).reduce((s,p)=>s+Number(financeValues[p.id]),0);
 const available=total-collected;
+const doneCount=items.filter(p=>found.has(p.id)).length;
+document.getElementById('financeDoneCount').textContent=doneCount;
+document.getElementById('financePendingCount').textContent=items.length-doneCount;
 document.getElementById('financeTotal').textContent=moneyFmt.format(total);
 document.getElementById('financeCollected').textContent=moneyFmt.format(collected);
 document.getElementById('financeAvailable').textContent=moneyFmt.format(available);
@@ -227,7 +230,7 @@ const sum=group.reduce((s,p)=>s+(Number.isFinite(Number(financeValues[p.id]))&&S
 return '<details class="finance-region"><summary><span>'+esc(region)+' · '+group.length+' local(is)</span><span>'+moneyFmt.format(sum)+'</span></summary>'+group.slice().sort((a,b)=>a.name.localeCompare(b.name,'pt-BR')).map(p=>{
 const raw=financeValues[p.id]??'';
 const valid=String(raw).trim()!==''&&Number.isFinite(Number(raw))&&Number(raw)>=0;
-return '<div class="finance-place"><div><div class="finance-place-name">'+esc(p.name)+'</div><div class="finance-place-area">'+esc(p.area||region)+' · '+esc(p.id)+'</div></div><div class="finance-place-row"><input type="number" min="0" step="0.01" inputmode="decimal" placeholder="Valor em US$" aria-label="Valor em dólares para '+esc(p.name)+'" data-finance-value="'+esc(p.id)+'" value="'+esc(raw)+'"><label class="finance-collected"><input type="checkbox" data-finance-found="'+esc(p.id)+'" '+(found.has(p.id)?'checked':'')+'> Coletado</label></div><div class="finance-place-value">'+(valid?moneyFmt.format(Number(raw)):'Valor não cadastrado')+'</div></div>';
+return '<div class="finance-place '+(found.has(p.id)?'is-collected':'')+'"><div><div class="finance-place-name">'+esc(p.name)+'</div><div class="finance-place-area">'+esc(p.area||region)+' · '+esc(p.id)+'</div></div><label class="finance-checkline"><input type="checkbox" data-finance-found="'+esc(p.id)+'" '+(found.has(p.id)?'checked':'')+'><span class="finance-checktext"><strong>'+(found.has(p.id)?'Coletado':'Ainda não coletado')+'</strong><small>'+(found.has(p.id)?'Este local já foi concluído':'Marque aqui quando pegar o dinheiro')+'</small></span></label><div class="finance-place-row"><input type="number" min="0" step="0.01" inputmode="decimal" placeholder="Valor em US$" aria-label="Valor em dólares para '+esc(p.name)+'" data-finance-value="'+esc(p.id)+'" value="'+esc(raw)+'"></div><div class="finance-place-value">'+(valid?moneyFmt.format(Number(raw)):'Valor não cadastrado')+'</div></div>';
 }).join('')+'</details>';
 }).join(''):'<div class="finance-empty">Os locais financeiros aparecerão aqui quando o catálogo for carregado.</div>';
 root.querySelectorAll('[data-finance-value]').forEach(input=>input.addEventListener('change',()=>{
