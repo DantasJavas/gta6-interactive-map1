@@ -37,8 +37,10 @@ button{padding:8px 10px;border-radius:7px;border:1px solid var(--line);backgroun
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script>
 (async()=>{
-const map=L.map('map',{crs:L.CRS.Simple,minZoom:-2,maxZoom:3});const bounds=[[0,0],[1000,1600]];
-L.rectangle(bounds,{color:'#596575',weight:1,fillColor:'#242a32',fillOpacity:.15}).addTo(map);map.fitBounds(bounds);L.control.scale({imperial:false}).addTo(map);
+const BASE='https://fbritoferreira.github.io/gta6';
+const map=L.map('map',{crs:L.CRS.Simple,minZoom:0,maxZoom:7});
+L.tileLayer(`${BASE}/tiles/night/{z}/{z},{y},{x}.webp`,{tileSize:256,maxNativeZoom:5,noWrap:true,attribution:'Map data: Open GTA 6 Map (fbritoferreira), CC BY 4.0 · <a href="https://github.com/fbritoferreira/gta6" target="_blank" rel="noopener">créditos</a>'}).addTo(map);
+const bounds=[[-1024,0],[0,1024]];map.fitBounds(bounds);
 const markers=L.layerGroup().addTo(map);let points=[];const found=new Set(JSON.parse(localStorage.getItem('gta6-found')||'[]'));
 const cats={armas:'Armas e equipamentos',veiculos:'Veículos raros/de luxo',dinheiro:'Dinheiro e tesouros',segredos:'Segredos e locais especiais',missoes:'Missões e atividades'};
 const statuses={confirmado:'Confirmado',relatado:'Relatado','em-investigacao':'Em investigação'};
