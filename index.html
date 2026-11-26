@@ -61,6 +61,29 @@ const baseLayers={'☀️ Dia':dayLayer,'🌙 Noite':nightLayer};
 L.control.layers(baseLayers,null,{position:'topright',collapsed:true}).addTo(map);
 map.on('baselayerchange',e=>{try{localStorage.setItem('gta6-map-style',e.layer===nightLayer?'night':'day')}catch(err){}});
 const bounds=[[-1024,0],[0,1024]];map.fitBounds(bounds);
+const overlayLayers={};
+const vectorLayers=L.control.layers(null,overlayLayers,{position:'topright',collapsed:true});
+vectorLayers.addTo(map);
+const vectorStatus=L.control({position:'bottomleft'});
+vectorStatus.onAdd=()=>{const el=L.DomUtil.create('div','leaflet-control-attribution');el.style.cssText='background:#17202acc;color:#f4f5f7;padding:4px 7px;border-radius:4px;font-size:11px';el.textContent='Camadas detalhadas: carregando…';return el};
+vectorStatus.addTo(map);
+const coordsToLatLng=coords=>L.latLng(-coords[1],coords[0]);
+async function addVectorLayer(path,name,style,filter){
+try{
+const response=await fetch(`${BASE}/data/${path}`);if(!response.ok)throw Error('HTTP '+response.status);
+const geo=await response.json();
+const features=filter?{...geo,features:geo.features.filter(filter)}:geo;
+const layer=L.geoJSON(features,{coordsToLatLng,style,onEachFeature:(feature,layer)=>{const kind=feature.properties?.layer||feature.properties?.kind;if(kind)layer.bindTooltip(name+' · '+kind,{sticky:true})}});
+overlayLayers[name]=layer;layer.addTo(map);vectorLayers.addOverlay(layer,name);
+return geo.features.length;
+}catch(error){console.warn('Falha ao carregar camada '+name,error);return 0}
+}
+const detailLoad=Promise.all([
+addVectorLayer('surface.json','Edificações e áreas construídas',feature=>feature.properties?.layer==='building'?{color:'#665746',weight:.55,opacity:.9,fillColor:'#e6d2ad',fillOpacity:.48}:feature.properties?.layer==='urban'?{color:'#9a9a78',weight:.35,opacity:.55,fillColor:'#b7b08b',fillOpacity:.16}:feature.properties?.layer==='park'?{color:'#477b54',weight:.4,opacity:.65,fillColor:'#4f9a68',fillOpacity:.28}:feature.properties?.layer==='sand'?{color:'#c5a86d',weight:.3,opacity:.4,fillColor:'#e3ca91',fillOpacity:.23}: {color:'#8ab7c7',weight:.3,opacity:.4,fillColor:'#8ab7c7',fillOpacity:.12},feature=>['building','urban','park','sand'].includes(feature.properties?.layer)),
+addVectorLayer('roads.json','Ruas e rodovias',feature=>{const k=feature.properties?.kind;return {color:k==='highway'?'#f6c66b':k==='main'?'#fff0c2':k==='street'?'#e0e5e8':'#b9c2c8',weight:k==='highway'?2.5:k==='main'?1.65:k==='street'?.9:.55,opacity:k==='highway'?.95:k==='main'?.85:.68,lineCap:'round',lineJoin:'round'}}),
+addVectorLayer('rails.json','Ferrovias',()=>({color:'#bd9be8',weight:1.2,opacity:.8,dashArray:'5 4'}))
+]).then(counts=>{vectorStatus.getContainer().textContent='Detalhes carregados: '+counts[0].toLocaleString('pt-BR')+' áreas · '+counts[1].toLocaleString('pt-BR')+' vias · '+counts[2].toLocaleString('pt-BR')+' ferrovias'});
+
 const markers=L.layerGroup().addTo(map);let points=[];const pointRenderer=L.canvas({padding:0.5});const found=new Set(JSON.parse(localStorage.getItem('gta6-found')||'[]'));
 const cats={armas:'Armas e equipamentos',veiculos:'Veículos raros/de luxo',dinheiro:'Dinheiro e tesouros',segredos:'Segredos e locais especiais',missoes:'Missões e atividades'};
 const statuses={confirmado:'Confirmado',relatado:'Relatado','em-investigacao':'Em investigação'};
