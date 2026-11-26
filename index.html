@@ -25,7 +25,7 @@ button{padding:8px 10px;border-radius:7px;border:1px solid var(--line);backgroun
 <header><h1>GTA 6 Interactive Map</h1><p>Mapa comunitário • pontos com evidência • filtros por objetivo</p></header>
 <div class="layout">
 <aside>
-<div class="status">🚧 Estrutura inicial: ainda não há base cartográfica oficial nem pontos confirmados cadastrados. Os locais só serão publicados quando houver evidência.</div>
+<div class="status" id="catalogStatus">📡 Carregando pontos comunitários do mapa de Leonida… Os locais importados aparecem como “Relatado” até serem verificados.</div>
 <label for="search">Pesquisar ponto</label><input id="search" type="search" placeholder="Nome ou descrição…">
 <label for="category">Categoria</label><select id="category"><option value="">Todas as categorias</option><option value="armas">Armas e equipamentos</option><option value="veiculos">Veículos raros/de luxo</option><option value="dinheiro">Dinheiro e tesouros</option><option value="segredos">Segredos e locais especiais</option><option value="missoes">Missões e atividades</option></select>
 <label for="evidence">Verificação</label><select id="evidence"><option value="">Todos os status</option><option value="confirmado">Confirmado</option><option value="relatado">Relatado</option><option value="em-investigacao">Em investigação</option></select>
@@ -41,19 +41,27 @@ const BASE='https://fbritoferreira.github.io/gta6';
 const map=L.map('map',{crs:L.CRS.Simple,minZoom:0,maxZoom:7});
 L.tileLayer(`${BASE}/tiles/night/{z}/{z},{y},{x}.webp`,{tileSize:256,maxNativeZoom:5,noWrap:true,attribution:'Map data: Open GTA 6 Map (fbritoferreira), CC BY 4.0 · <a href="https://github.com/fbritoferreira/gta6" target="_blank" rel="noopener">créditos</a>'}).addTo(map);
 const bounds=[[-1024,0],[0,1024]];map.fitBounds(bounds);
-const markers=L.layerGroup().addTo(map);let points=[];const found=new Set(JSON.parse(localStorage.getItem('gta6-found')||'[]'));
+const markers=L.layerGroup().addTo(map);let points=[];const pointRenderer=L.canvas({padding:0.5});const found=new Set(JSON.parse(localStorage.getItem('gta6-found')||'[]'));
 const cats={armas:'Armas e equipamentos',veiculos:'Veículos raros/de luxo',dinheiro:'Dinheiro e tesouros',segredos:'Segredos e locais especiais',missoes:'Missões e atividades'};
 const statuses={confirmado:'Confirmado',relatado:'Relatado','em-investigacao':'Em investigação'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function render(){
 const q=document.getElementById('search').value.toLowerCase(),cat=document.getElementById('category').value,ev=document.getElementById('evidence').value;
 const shown=points.filter(p=>(!cat||p.category===cat)&&(!ev||p.status===ev)&&(!q||(p.name+' '+p.description).toLowerCase().includes(q)));
-markers.clearLayers();shown.forEach(p=>{if(Array.isArray(p.coordinates)&&p.coordinates.length===2)L.marker(p.coordinates).bindPopup('<b>'+esc(p.name)+'</b><br>'+esc(p.description)+'<br><small>'+esc(statuses[p.status]||p.status)+'</small>').addTo(markers)});
+markers.clearLayers();shown.forEach(p=>{if(Array.isArray(p.coordinates)&&p.coordinates.length===2)L.circleMarker(p.coordinates,{renderer:pointRenderer,radius:5,color:'#f1c46b',weight:1,fillColor:p.category==='armas'?'#e06c75':p.category==='veiculos'?'#62a8ea':p.category==='dinheiro'?'#65c18c':'#c6a6e8',fillOpacity:.9}).bindPopup('<b>'+esc(p.name)+'</b><br>'+esc(p.description)+'<br><small>'+esc(p.area||'Leonida')+' · '+esc(statuses[p.status]||p.status)+'</small>').addTo(markers)});
 const out=document.getElementById('results');out.innerHTML=shown.length?shown.map(p=>'<div class="item"><strong>'+esc(p.name)+'</strong><small>'+esc(cats[p.category]||p.category)+' • '+esc(statuses[p.status]||p.status)+(found.has(p.id)?' • ✓ Encontrado':'')+'</small><p class="hint">'+esc(p.description)+'</p><button data-id="'+esc(p.id)+'">'+(found.has(p.id)?'Desmarcar encontrado':'Marcar como encontrado')+'</button></div>').join(''):'<div class="empty">Nenhum ponto cadastrado corresponde aos filtros. O catálogo começa vazio para evitar informações inventadas.</div>';
 out.querySelectorAll('button[data-id]').forEach(b=>b.addEventListener('click',()=>{found.has(b.dataset.id)?found.delete(b.dataset.id):found.add(b.dataset.id);localStorage.setItem('gta6-found',JSON.stringify([...found]));render()}));
 }
 ['search','category','evidence'].forEach(id=>document.getElementById(id).addEventListener(id==='search'?'input':'change',render));
-try{const r=await fetch('./data/points.json');if(!r.ok)throw Error('HTTP '+r.status);const data=await r.json();points=Array.isArray(data.points)?data.points:[];render()}catch(e){document.getElementById('results').innerHTML='<div class="empty">Não foi possível carregar data/points.json. Confira a publicação no GitHub Pages.</div>'}
+try{
+const source='https://fbritoferreira.github.io/gta6/data/locations.json';
+const r=await fetch(source);if(!r.ok)throw Error('HTTP '+r.status);
+const data=await r.json();
+const categories={weapon:'armas',vehicle:'veiculos',bank:'dinheiro',smash:'dinheiro',safe:'dinheiro',towatm:'dinheiro',payday:'dinheiro',treasure:'dinheiro',card:'segredos',package:'segredos',bottle:'segredos',meteorite:'segredos',bookswap:'segredos',mural:'segredos',streetart:'segredos',waink:'segredos',magazine:'segredos',gang:'missoes',race:'missoes',arcade:'missoes',stunt:'missoes',basejump:'missoes',hoop:'missoes',drone:'missoes',fishing:'missoes',knife:'missoes',bridge:'missoes',hunting:'missoes',event:'missoes',meditation:'missoes',range:'missoes'};
+points=(Array.isArray(data)?data:[]).filter(p=>categories[p.kind]).map(p=>({id:p.id,name:p.name,description:[p.type,p.description].filter(Boolean).join(' — '),category:categories[p.kind],status:'relatado',coordinates:[-Number(p.y),Number(p.x)],area:p.area,source:'Open GTA 6 Map'}));
+document.getElementById('catalogStatus').textContent='📍 '+points.length+' pontos comunitários carregados. As informações estão classificadas como “Relatado” e precisam de verificação antes de serem tratadas como confirmadas.';
+render();
+}catch(e){document.getElementById('catalogStatus').textContent='⚠️ Não foi possível buscar o catálogo comunitário. Verifique a conexão e tente atualizar a página.';document.getElementById('results').innerHTML='<div class="empty">Falha ao carregar os pontos externos. Os filtros não terão resultados até o catálogo ser carregado.</div>'}
 })();
 </script>
 </body></html>
