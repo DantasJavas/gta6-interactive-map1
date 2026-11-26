@@ -18,6 +18,15 @@ label{display:block;font-weight:600;margin:15px 0 7px}input,select{width:100%;pa
 .empty{padding:14px;border:1px dashed var(--line);border-radius:9px;color:var(--muted);line-height:1.5}
 button{padding:8px 10px;border-radius:7px;border:1px solid var(--line);background:#292f3a;color:white}
 .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#1a1e26;color:#f4f5f7}.leaflet-container a{color:var(--accent)}
+.pin-icon{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border:2px solid rgba(255,255,255,.9);border-radius:50% 50% 50% 4px;transform:rotate(-45deg);box-shadow:0 2px 7px #0009;font-size:15px}
+.pin-icon span{transform:rotate(45deg);line-height:1}
+.pin-armas{background:#c94b54}.pin-veiculos{background:#287ec0}.pin-dinheiro{background:#238653}.pin-segredos{background:#7950a8}.pin-missoes{background:#bd782c}
+.nearby-row{display:flex;align-items:center;gap:10px;margin-top:16px;padding:11px;border:1px solid var(--line);border-radius:9px;background:#141820}
+.nearby-row input{width:18px;height:18px;accent-color:var(--accent);flex:0 0 auto}
+.nearby-row label{margin:0;font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:8px 12px;margin:12px 0;color:var(--muted);font-size:12px}
+.legend span{display:inline-flex;align-items:center;gap:5px}.legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.result-count{font-size:12px;color:var(--muted);margin:12px 0 6px}
 @media(max-width:760px){.layout{grid-template-columns:1fr}aside{border-right:0;border-bottom:1px solid var(--line)}#map{height:55vh;min-height:360px;grid-row:1}header{padding:15px}}
 </style>
 </head>
@@ -29,6 +38,10 @@ button{padding:8px 10px;border-radius:7px;border:1px solid var(--line);backgroun
 <label for="search">Pesquisar ponto</label><input id="search" type="search" placeholder="Nome ou descrição…">
 <label for="category">Categoria</label><select id="category"><option value="">Todas as categorias</option><option value="armas">Armas e equipamentos</option><option value="veiculos">Veículos raros/de luxo</option><option value="dinheiro">Dinheiro e tesouros</option><option value="segredos">Segredos e locais especiais</option><option value="missoes">Missões e atividades</option></select>
 <label for="evidence">Verificação</label><select id="evidence"><option value="">Todos os status</option><option value="confirmado">Confirmado</option><option value="relatado">Relatado</option><option value="em-investigacao">Em investigação</option></select>
+<div class="nearby-row"><input id="nearbyOnly" type="checkbox"><label for="nearbyOnly">Mostrar somente pontos próximos ao centro do mapa</label></div>
+<label for="nearbyRadius">Raio de proximidade</label><select id="nearbyRadius"><option value="30">Curto</option><option value="60" selected>Médio</option><option value="120">Amplo</option><option value="240">Muito amplo</option></select>
+<div class="legend"><span><i style="background:#c94b54"></i>🔫 Armas</span><span><i style="background:#287ec0"></i>🚗 Veículos</span><span><i style="background:#238653"></i>💰 Dinheiro</span><span><i style="background:#7950a8"></i>🔎 Segredos</span><span><i style="background:#bd782c"></i>🎯 Missões</span></div>
+<div id="resultCount" class="result-count">Carregando pontos…</div>
 <div id="results"><div class="empty">Carregando catálogo…</div></div>
 <p class="hint">Seu progresso é salvo neste navegador. A sincronização entre dispositivos será adicionada numa etapa futura.</p>
 </aside>
@@ -45,14 +58,28 @@ const markers=L.layerGroup().addTo(map);let points=[];const pointRenderer=L.canv
 const cats={armas:'Armas e equipamentos',veiculos:'Veículos raros/de luxo',dinheiro:'Dinheiro e tesouros',segredos:'Segredos e locais especiais',missoes:'Missões e atividades'};
 const statuses={confirmado:'Confirmado',relatado:'Relatado','em-investigacao':'Em investigação'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pinMeta={armas:{emoji:'🔫',cls:'pin-armas'},veiculos:{emoji:'🚗',cls:'pin-veiculos'},dinheiro:{emoji:'💰',cls:'pin-dinheiro'},segredos:{emoji:'🔎',cls:'pin-segredos'},missoes:{emoji:'🎯',cls:'pin-missoes'}};
 function render(){
-const q=document.getElementById('search').value.toLowerCase(),cat=document.getElementById('category').value,ev=document.getElementById('evidence').value;
-const shown=points.filter(p=>(!cat||p.category===cat)&&(!ev||p.status===ev)&&(!q||(p.name+' '+p.description).toLowerCase().includes(q)));
-markers.clearLayers();shown.forEach(p=>{if(Array.isArray(p.coordinates)&&p.coordinates.length===2)L.circleMarker(p.coordinates,{renderer:pointRenderer,radius:5,color:'#f1c46b',weight:1,fillColor:p.category==='armas'?'#e06c75':p.category==='veiculos'?'#62a8ea':p.category==='dinheiro'?'#65c18c':'#c6a6e8',fillOpacity:.9}).bindPopup('<b>'+esc(p.name)+'</b><br>'+esc(p.description)+'<br><small>'+esc(p.area||'Leonida')+' · '+esc(statuses[p.status]||p.status)+'</small>').addTo(markers)});
-const out=document.getElementById('results');out.innerHTML=shown.length?shown.map(p=>'<div class="item"><strong>'+esc(p.name)+'</strong><small>'+esc(cats[p.category]||p.category)+' • '+esc(statuses[p.status]||p.status)+(found.has(p.id)?' • ✓ Encontrado':'')+'</small><p class="hint">'+esc(p.description)+'</p><button data-id="'+esc(p.id)+'">'+(found.has(p.id)?'Desmarcar encontrado':'Marcar como encontrado')+'</button></div>').join(''):'<div class="empty">Nenhum ponto cadastrado corresponde aos filtros. O catálogo começa vazio para evitar informações inventadas.</div>';
+const q=document.getElementById('search').value.toLocaleLowerCase('pt-BR'),cat=document.getElementById('category').value,ev=document.getElementById('evidence').value;
+const nearby=document.getElementById('nearbyOnly').checked,radius=Number(document.getElementById('nearbyRadius').value),center=map.getCenter();
+const filtered=points.filter(p=>(!cat||p.category===cat)&&(!ev||p.status===ev)&&(!q||(p.name+' '+p.description).toLocaleLowerCase('pt-BR').includes(q))&&(!nearby||Math.hypot(p.coordinates[0]-center.lat,p.coordinates[1]-center.lng)<=radius));
+markers.clearLayers();
+filtered.forEach(p=>{
+if(Array.isArray(p.coordinates)&&p.coordinates.length===2){
+const meta=pinMeta[p.category]||{emoji:'📍',cls:'pin-segredos'};
+const icon=L.divIcon({className:'',html:'<div class="pin-icon '+meta.cls+'"><span>'+meta.emoji+'</span></div>',iconSize:[30,30],iconAnchor:[15,27],popupAnchor:[0,-25]});
+L.marker(p.coordinates,{icon}).bindPopup('<b>'+esc(p.name)+'</b><br>'+esc(p.description)+'<br><small>'+esc(p.area||'Leonida')+' · '+esc(statuses[p.status]||p.status)+'</small>').addTo(markers);
+}
+});
+const count=document.getElementById('resultCount');
+count.textContent=filtered.length+' ponto(s) encontrado(s)'+(nearby?' perto do centro atual do mapa':'');
+const out=document.getElementById('results'),limit=80,listed=filtered.slice(0,limit);
+out.innerHTML=listed.length?listed.map(p=>'<div class="item"><strong>'+esc(p.name)+'</strong><small>'+esc(cats[p.category]||p.category)+' • '+esc(statuses[p.status]||p.status)+(found.has(p.id)?' • ✓ Encontrado':'')+'</small><p class="hint">'+esc(p.description)+'</p><button data-id="'+esc(p.id)+'">'+(found.has(p.id)?'Desmarcar encontrado':'Marcar como encontrado')+'</button></div>').join(''):'<div class="empty">Nenhum ponto encontrado com estes filtros. Tente aumentar o raio, mover o mapa ou limpar algum filtro.</div>';
+if(filtered.length>limit)out.innerHTML+='<p class="hint">Mostrando os primeiros '+limit+' de '+filtered.length+' resultados. Refine a pesquisa para encontrar um ponto específico.</p>';
 out.querySelectorAll('button[data-id]').forEach(b=>b.addEventListener('click',()=>{found.has(b.dataset.id)?found.delete(b.dataset.id):found.add(b.dataset.id);localStorage.setItem('gta6-found',JSON.stringify([...found]));render()}));
 }
-['search','category','evidence'].forEach(id=>document.getElementById(id).addEventListener(id==='search'?'input':'change',render));
+['search','category','evidence','nearbyOnly','nearbyRadius'].forEach(id=>document.getElementById(id).addEventListener(id==='search'?'input':id==='nearbyOnly'?'change':'change',render));
+map.on('moveend',()=>{if(document.getElementById('nearbyOnly').checked)render()});
 try{
 const source='https://fbritoferreira.github.io/gta6/data/locations.json';
 const r=await fetch(source);if(!r.ok)throw Error('HTTP '+r.status);
