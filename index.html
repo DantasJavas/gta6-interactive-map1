@@ -197,7 +197,7 @@ out.innerHTML=!cat?'<div class="empty">Selecione uma categoria nos filtros para 
 if(filtered.length>limit)out.innerHTML+='<p class="hint">Mostrando os primeiros '+limit+' de '+filtered.length+' resultados. Refine a pesquisa para encontrar um ponto específico.</p>';
 out.querySelectorAll('button[data-id]').forEach(b=>b.addEventListener('click',()=>{found.has(b.dataset.id)?found.delete(b.dataset.id):found.add(b.dataset.id);localStorage.setItem('gta6-found',JSON.stringify([...found]));render()}));
 out.querySelectorAll('button[data-view]').forEach(b=>b.addEventListener('click',()=>{const p=filtered.find(item=>item.id===b.dataset.view);if(!p||!Array.isArray(p.coordinates))return;map.setView(p.coordinates,Math.max(map.getZoom(),5.5),{animate:true});markers.eachLayer(marker=>{if(marker.getPopup()?.getContent()?.includes(esc(p.name)))marker.openPopup()})}));
-renderFinancePanel();
+
 }
 ['search','category','evidence','nearbyOnly','nearbyRadius'].forEach(id=>document.getElementById(id).addEventListener(id==='search'?'input':id==='nearbyOnly'?'change':'change',render));
 map.on('moveend',()=>{if(document.getElementById('nearbyOnly').checked)render()});
