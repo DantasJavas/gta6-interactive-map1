@@ -61,6 +61,14 @@ aside{padding:13px}
 @media(max-width:760px) and (orientation:landscape){.layout{grid-template-columns:minmax(220px,34%) minmax(0,1fr)}#map{height:calc(100dvh - 65px);min-height:260px;max-height:none;order:2}aside{order:1;max-height:calc(100dvh - 65px);overflow:auto;border-bottom:0;border-right:1px solid var(--line);padding:10px}header{padding:8px 12px}header p{display:none}}
 @media(min-width:761px){.layout{align-items:stretch}aside{overflow-y:auto;max-height:calc(100vh - 84px)}#map{position:sticky;top:0}}
 @supports(height:100dvh){@media(max-width:760px) and (orientation:portrait){#map{height:82dvh}}}
+
+.image-zoom{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.92);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.image-zoom.is-open{display:flex}
+.image-zoom img{display:block;max-width:min(96vw,1200px);max-height:88dvh;width:auto;height:auto;object-fit:contain;border-radius:10px;box-shadow:0 12px 50px #000b}
+.image-zoom-close{position:absolute;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));width:46px;height:46px;border-radius:50%;border:1px solid #ffffff55;background:#242a32;color:#fff;font-size:25px;line-height:1;cursor:pointer}
+.image-zoom-hint{position:absolute;bottom:max(14px,env(safe-area-inset-bottom));left:12px;right:12px;text-align:center;color:#ddd;font-size:12px;pointer-events:none}
+.popup-item-image,.item-detail-shot{cursor:zoom-in}
+body.image-zoom-active{overflow:hidden}
 </style>
 </head>
 <body>
@@ -85,7 +93,16 @@ aside{padding:13px}
 </aside>
 <main id="map" role="application" aria-label="Mapa interativo de Leonida. Use dois dedos para ampliar e arraste para navegar."></main>
 </div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="">
+const imageZoom=document.getElementById('imageZoom');
+const imageZoomPhoto=document.getElementById('imageZoomPhoto');
+function closeImageZoom(){imageZoom.classList.remove('is-open');document.body.classList.remove('image-zoom-active');imageZoomPhoto.removeAttribute('src')}
+function openImageZoom(img){if(!img||!img.src)return;imageZoomPhoto.src=img.currentSrc||img.src;imageZoomPhoto.alt=img.alt||'Imagem ampliada';imageZoom.classList.add('is-open');document.body.classList.add('image-zoom-active')}
+document.addEventListener('click',event=>{const img=event.target.closest('.popup-item-image,.item-detail-shot');if(img){event.preventDefault();openImageZoom(img)}});
+document.getElementById('imageZoomClose').addEventListener('click',closeImageZoom);
+imageZoom.addEventListener('click',event=>{if(event.target===imageZoom)closeImageZoom()});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&imageZoom.classList.contains('is-open'))closeImageZoom()});
+</script>
 <script>
 (async()=>{
 const BASE='https://fbritoferreira.github.io/gta6';
