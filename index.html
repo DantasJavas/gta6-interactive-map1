@@ -33,6 +33,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .legend{display:flex;flex-wrap:wrap;gap:8px 12px;margin:12px 0;color:var(--muted);font-size:12px}
 .legend span{display:inline-flex;align-items:center;gap:5px}.legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
 .result-count{font-size:12px;color:var(--muted);margin:12px 0 6px}
+.item-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}.item-actions button{flex:1 1 125px}
+.leaflet-control-scale-line{background:#17202acc;color:#f4f5f7;border-color:#d9b66f;text-shadow:none;font-size:11px}
+.leaflet-control-layers{background:#1a1e26;color:#f4f5f7;border:1px solid var(--line);border-radius:8px}.leaflet-control-layers-separator{border-top-color:var(--line)}
+@media(max-width:420px){.item-actions button{flex-basis:100%}}
 @media(max-width:760px){.layout{grid-template-columns:minmax(0,1fr);min-height:0}aside{border-right:0;border-bottom:1px solid var(--line);padding:14px;order:2}#map{height:76vh;height:76dvh;min-height:420px;max-height:none;grid-row:auto;order:1}header{padding:13px 15px}header p{font-size:13px}#results{grid-template-columns:1fr}.legend{gap:7px 10px}}
 @media(max-width:760px) and (orientation:landscape){.layout{grid-template-columns:minmax(220px,34%) minmax(0,1fr)}#map{height:calc(100dvh - 65px);min-height:260px;max-height:none;order:2}aside{order:1;max-height:calc(100dvh - 65px);overflow:auto;border-bottom:0;border-right:1px solid var(--line);padding:10px}header{padding:8px 12px}header p{display:none}}
 @media(min-width:761px){.layout{align-items:stretch}aside{overflow-y:auto;max-height:calc(100vh - 84px)}#map{position:sticky;top:0}}
@@ -60,7 +64,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 <script>
 (async()=>{
 const BASE='https://fbritoferreira.github.io/gta6';
-const map=L.map('map',{crs:L.CRS.Simple,minZoom:0,maxZoom:7});
+const map=L.map('map',{crs:L.CRS.Simple,minZoom:0,maxZoom:7,zoomSnap:0.25,zoomDelta:0.5,wheelPxPerZoomLevel:100,preferCanvas:true});
+L.control.scale({position:'bottomright',metric:true,imperial:false,maxWidth:140}).addTo(map);
+let mapResizeFrame=0;
+function refreshMapSize(){cancelAnimationFrame(mapResizeFrame);mapResizeFrame=requestAnimationFrame(()=>map.invalidateSize({pan:false}));}
+window.addEventListener('resize',refreshMapSize,{passive:true});
+window.addEventListener('orientationchange',()=>setTimeout(refreshMapSize,180),{passive:true});
 const attribution='Map data: Open GTA 6 Map (fbritoferreira), CC BY 4.0 · <a href="https://github.com/fbritoferreira/gta6" target="_blank" rel="noopener">créditos</a>';
 const dayLayer=L.tileLayer(`${BASE}/tiles/day/{z}/{z},{y},{x}.webp`,{tileSize:256,maxNativeZoom:5,maxZoom:7,noWrap:true,keepBuffer:4,updateWhenIdle:true,attribution});
 const nightLayer=L.tileLayer(`${BASE}/tiles/night/{z}/{z},{y},{x}.webp`,{tileSize:256,maxNativeZoom:5,maxZoom:7,noWrap:true,keepBuffer:4,updateWhenIdle:true,attribution});
@@ -107,15 +116,16 @@ filtered.forEach(p=>{
 if(Array.isArray(p.coordinates)&&p.coordinates.length===2){
 const meta=pinMeta[p.category]||{emoji:'📍',cls:'pin-segredos'};
 const icon=L.divIcon({className:'',html:'<div class="pin-icon '+meta.cls+'"><span>'+meta.emoji+'</span></div>',iconSize:[30,30],iconAnchor:[15,27],popupAnchor:[0,-25]});
-L.marker(p.coordinates,{icon}).bindPopup('<b>'+esc(p.name)+'</b><br>'+esc(p.description)+'<br><small>'+esc(p.area||'Leonida')+' · '+esc(statuses[p.status]||p.status)+'</small>').addTo(markers);
+L.marker(p.coordinates,{icon}).bindPopup('<b>'+esc(p.name)+'</b><br>'+esc(p.description)+'<br><small>'+esc(p.area||'Leonida')+' · '+esc(statuses[p.status]||p.status)+'</small><br><small>Coordenadas do catálogo: '+p.coordinates[1].toFixed(4)+', '+(-p.coordinates[0]).toFixed(4)+'</small>').addTo(markers);
 }
 });
 const count=document.getElementById('resultCount');
 count.textContent=filtered.length+' ponto(s) encontrado(s)'+(nearby?' perto do centro atual do mapa':'');
 const out=document.getElementById('results'),limit=80,listed=filtered.slice(0,limit);
-out.innerHTML=listed.length?listed.map(p=>'<div class="item"><strong>'+esc(p.name)+'</strong><small>'+esc(cats[p.category]||p.category)+' • '+esc(statuses[p.status]||p.status)+(found.has(p.id)?' • ✓ Encontrado':'')+'</small><p class="hint">'+esc(p.description)+'</p><button data-id="'+esc(p.id)+'">'+(found.has(p.id)?'Desmarcar encontrado':'Marcar como encontrado')+'</button></div>').join(''):'<div class="empty">Nenhum ponto encontrado com estes filtros. Tente aumentar o raio, mover o mapa ou limpar algum filtro.</div>';
+out.innerHTML=listed.length?listed.map(p=>'<div class="item"><strong>'+esc(p.name)+'</strong><small>'+esc(cats[p.category]||p.category)+' • '+esc(statuses[p.status]||p.status)+(found.has(p.id)?' • ✓ Encontrado':'')+'</small><p class="hint">'+esc(p.description)+'</p><div class="item-actions"><button data-view="'+esc(p.id)+'">Ver no mapa</button><button data-id="'+esc(p.id)+'">'+(found.has(p.id)?'Desmarcar encontrado':'Marcar como encontrado')+'</button></div></div>').join(''):'<div class="empty">Nenhum ponto encontrado com estes filtros. Tente aumentar o raio, mover o mapa ou limpar algum filtro.</div>';
 if(filtered.length>limit)out.innerHTML+='<p class="hint">Mostrando os primeiros '+limit+' de '+filtered.length+' resultados. Refine a pesquisa para encontrar um ponto específico.</p>';
 out.querySelectorAll('button[data-id]').forEach(b=>b.addEventListener('click',()=>{found.has(b.dataset.id)?found.delete(b.dataset.id):found.add(b.dataset.id);localStorage.setItem('gta6-found',JSON.stringify([...found]));render()}));
+out.querySelectorAll('button[data-view]').forEach(b=>b.addEventListener('click',()=>{const p=filtered.find(item=>item.id===b.dataset.view);if(!p||!Array.isArray(p.coordinates))return;map.setView(p.coordinates,Math.max(map.getZoom(),5.5),{animate:true});markers.eachLayer(marker=>{if(marker.getPopup()?.getContent()?.includes(esc(p.name)))marker.openPopup()})}));
 }
 ['search','category','evidence','nearbyOnly','nearbyRadius'].forEach(id=>document.getElementById(id).addEventListener(id==='search'?'input':id==='nearbyOnly'?'change':'change',render));
 map.on('moveend',()=>{if(document.getElementById('nearbyOnly').checked)render()});
