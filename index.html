@@ -269,7 +269,7 @@ out.querySelectorAll('button[data-view]').forEach(b=>b.addEventListener('click',
 ['search','category','evidence','regionFilter','chapterFilter','nearbyOnly','nearbyRadius'].forEach(id=>document.getElementById(id).addEventListener(id==='search'?'input':id==='nearbyOnly'?'change':'change',render));
 map.on('moveend',()=>{if(document.getElementById('nearbyOnly').checked)render()});
 try{
-const source='https://fbritoferreira.github.io/gta6/data/locations.json';
+const source='./data/locations.json';
 const r=await fetch(source);if(!r.ok)throw Error('HTTP '+r.status);
 const data=await r.json();
 try{const pr=await fetch(`${BASE}/icons/pins/index.json`);if(pr.ok)knownPins=new Set(await pr.json())}catch(e){}
